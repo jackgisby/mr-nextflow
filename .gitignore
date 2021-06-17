@@ -37,3 +37,14 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# pipeline output
+results
+
+# nextflow files/folders
+work
+.nextflow.log*
+.nextflow
+
+# for now don't upload test data
+tests/data
