@@ -9,16 +9,18 @@ process GET_INPUT_VARIANTS {
     file exposure_input_data
 
     output:
-    file "exposure_gwas.tsv", emit: tsmr_exposure
-    file "outcome_gwas.tsv",  emit: tsmr_outcome
+    path "exposure_gwas.csv", emit: tsmr_exposure
+    path "outcome_gwas.csv",  emit: tsmr_outcome
     
     script:  // must use argument parser in R and must also allow input of colnames
     """
-    R convert_input_gwas.R 
-        --exposure_input_data $exposure_input_data 
-        --outcome_input_data $params.outcome_input_data 
-        --data_format_exposure $params.data_format.exposure 
-        --data_format_outcome $params.data_format.outcome 
-        --p_cutoff $params.p_cutoff
+    echo $exposure_input_data ;
+
+    Rscript    $baseDir/bin/convert_input_gwas.R                       \
+             --exposure_input_data $exposure_input_data                \
+             --outcome_input_data $params.outcome_input_data           \
+             --data_format_exposure $params.data_format.exposure       \
+             --data_format_outcome $params.data_format.outcome         \
+             --p_cutoff $params.p_cutoff
     """
 }
