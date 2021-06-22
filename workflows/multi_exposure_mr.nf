@@ -6,15 +6,13 @@ include { GET_INPUT_VARIANTS } from '../modules/get_input_variants.nf'
 workflow MULTI_EXPOSURE_MR {
 
     // get exposure file names
-    exposure_input_data = Channel.fromPath("${params.exposure_input_dir}/*${params.data_format.exposure}")
+    exposure_input_data = Channel.fromPath("${params.exposure.input_dir}/*${params.exposure.data_format}")
 
     // reformat data into TwoSampleMR format w/ significant variants
-    GET_INPUT_VARIANTS( exposure_input_data )
-
-    // GET_INPUT_VARIANTS.out.tsmr_outcome.view()
+    GET_INPUT_VARIANTS(exposure_input_data)
 
     // do plink clumping
-    // INSTRUMENT_SELECTION
+    // INSTRUMENT_SELECTION(GET_INPUT_VARIANTS.out.tsmr_exposure, GET_INPUT_VARIANTS.out.tsmr_outcome)
 
     // get ld matrix
     // EXTRACT_LD_MATRIX
