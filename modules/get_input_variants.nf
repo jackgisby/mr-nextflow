@@ -3,15 +3,18 @@
 
 process GET_INPUT_VARIANTS {
 
-    label 'get_gwas_data'
+    label 'short_plink'
+    publishDir "$params.outdir/harmonised_data/", mode: params.publish_dir_mode
 
     input:
     file exposure_input_data
 
     output:
-    path "exposure_gwas.csv", emit: tsmr_exposure
-    path "outcome_gwas.csv",  emit: tsmr_outcome
-    
+    path "*_cis_harm.csv", emit: cis_harm
+    path "*_all_harm.csv",  emit: all_harm
+    // path "*_cis_location.csv", emit: cis_location
+    // path "*_top_location.csv", emit: top_location
+
     script:  // many arguments so we can pass the column names of these files
     """
     echo $exposure_input_data ;
@@ -19,10 +22,16 @@ process GET_INPUT_VARIANTS {
     Rscript  --verbose $baseDir/bin/convert_input_gwas.R \
              --exposure_input_data '$exposure_input_data' \
              --outcome_input_data '$params.outcome.input_data' \
-             --data_format_exposure '$params.exposure.data_format' \
-             --data_format_outcome '$params.outcome.data_format' \
              --p_cutoff $params.p_cutoff \
              --auxiliary_script_dir '$baseDir/bin/auxiliary' \
+             --cis_region '$params.cis_region' \
+             --plink_memory $params.plink.clump_memory \
+             --plink_clump_r2 $params.plink.clump_r2 \
+             --plink_clump_kb $params.plink.clump_kb \
+             --plink_bin '$params.plink.bin' \
+             --plink_linkage_files '$params.plink.linkage_files' \
+             --gene_positions '$params.gene_to_positions' \
+             --gene_filenames '$params.gene_to_filenames' \
              --exposure_snp_col '$params.exposure.snp_col' \
              --exposure_beta_col '$params.exposure.beta_col' \
              --exposure_se_col '$params.exposure.se_col' \
