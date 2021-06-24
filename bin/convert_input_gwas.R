@@ -59,8 +59,17 @@ convert_input_gwas <- function(opt) {
 
     cis_name <- paste(exposure_name, "cis", "harm", sep="_")
     all_name <- paste(exposure_name, "all", "harm", sep="_")
-    blank_return <- list(cis_name=data.frame(), all_name=data.frame())
-    names(blank_return) <- c(cis_name, all_name)
+
+    cis_exposure_name <- paste(exposure_name, "cis", "exposure", sep="_")
+    cis_outcome_name <- paste(exposure_name, "cis", "outcome", sep="_")
+    top_exposure_name <- paste(exposure_name, "top", "exposure", sep="_")
+    top_outcome_name <- paste(exposure_name, "top", "outcome", sep="_")
+
+    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, top_exposure_name, top_outcome_name)
+    blank_return <- list("cis_name"=data.frame(), "all_name"=data.frame(), 
+                         "cis_exposure"=data.frame(), "cis_outcome"=data.frame(), 
+                         "top_exposure"=data.frame(), "top_outcome"=data.frame())
+    names(blank_return) <- return_names
 
     # load exposure w/ fread
     exposure_gwas <- fread(opt$exposure_input_data)
@@ -69,7 +78,7 @@ convert_input_gwas <- function(opt) {
     print(head(exposure_gwas))
 
     # make list to map exposure colnames
-    exposure_cols = list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr_col", "pos")
+    exposure_cols = list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr", "pos")
     old_exposure_cols <- c(
         opt$exposure_snp_col, 
         opt$exposure_beta_col, 
@@ -107,6 +116,7 @@ convert_input_gwas <- function(opt) {
     print(head(exposure_gwas))
 
     # limit exposure to significant variants
+    entire_exposure_gwas <- exposure_gwas
     exposure_gwas <- data.frame(exposure_gwas[exposure_gwas$pval <= opt$p_cutoff,])
 
     print("limited to significant exposures")
@@ -114,23 +124,25 @@ convert_input_gwas <- function(opt) {
 
     if (length(exposure_gwas) == 0) {
         message("no significant exposure variants")
-        return(list(cis_name=data.frame(), all_name=data.frame()))
+        return(blank_return)
     }
 
+    exposure_gwas$gene <- exposure_name
+
     # remove snps in MHC region
-    which_mhc = exposure_gwas$chr_col == 6 & exposure_gwas$pos > 26000000 & exposure_gwas$pos < 34000000
+    which_mhc = exposure_gwas$chr == 6 & exposure_gwas$pos > 26000000 & exposure_gwas$pos < 34000000
     exposure_gwas <- exposure_gwas[-which_mhc,]
 
     if (length(exposure_gwas) == 0) {
         message("no significant exposure variants following removal of MHC")
-        return()
+        return(blank_return)
     }
 
     # load outcome w/ fread
     outcome_gwas <- fread(opt$outcome_input_data)
 
     # make colname list using input options
-    outcome_cols = list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr_col", "pos")
+    outcome_cols = list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr", "pos")
     old_outcome_cols <- c(
         opt$outcome_snp_col, 
         opt$outcome_beta_col, 
@@ -171,6 +183,7 @@ convert_input_gwas <- function(opt) {
     print(head(outcome_gwas))
 
     # limit each gwas to common variants
+    entire_outcome_gwas <- outcome_gwas
     outcome_gwas <- data.frame(outcome_gwas[outcome_gwas$SNP %in% exposure_gwas$SNP,])
     exposure_gwas <- exposure_gwas[exposure_gwas$SNP %in% outcome_gwas$SNP,]
 
@@ -210,21 +223,39 @@ convert_input_gwas <- function(opt) {
     print(head(outcome_gwas))
 
     exposure_gwas$type <- "trans"
+    cis_location <- data.frame()
 
     if (opt$gene_positions != "") {
         
         gene_position_map <- data.frame(fread(opt$gene_positions))
         gene_position_map <- gene_position_map[which(gene_position_map$chromosome_name %in% 1:22),]
+
         act_map <- gene_position_map[tolower(gene_position_map$hgnc_symbol) == exposure_name,]
         
         # define which locus is a cis-pqtl if any - variant within gene/cis region
         if (nrow(act_map) > 0) {
-            
-            exposure_gwas$type[exposure_gwas$chr.exposure == act_map$chromosome_name &
-                               exposure_gwas$pos.exposure > act_map$start_position - opt$cis_region & 
-                               exposure_gwas$pos.exposure < act_map$end_position + opt$cis_region
+
+            cis_location <- data.frame(
+                "chr"=act_map$chromosome_name,
+                "start"=act_map$start_position - opt$cis_region, 
+                "end"=act_map$end_position + opt$cis_region
+            )
+
+            exposure_gwas$type[exposure_gwas$chr.exposure == cis_location$chr[1] &
+                               exposure_gwas$pos.exposure > cis_location$start[1] & 
+                               exposure_gwas$pos.exposure < cis_location$end[1]
             ] <- "cis"
+            
+            # get all cis region variants for downstream
+            cis_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == cis_location$chr[1],]
+            cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$pos > cis_location$start[1],]
+            cis_exposure_gwas <- data.frame(cis_exposure_gwas[cis_exposure_gwas$pos < cis_location$end[1],])
+            cis_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% cis_exposure_gwas$SNP,])
+            cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$SNP %in% cis_outcome_gwas$SNP,]
+
         } else {
+            cis_exposure_gwas <- data.frame()
+            cis_outcome_gwas <- data.frame()
             message("gene not found in gene position file")
         }
         
@@ -243,8 +274,24 @@ convert_input_gwas <- function(opt) {
     if (nrow(exposure_gwas) > 0) {
         all_harm$exposure <- paste(exposure_name, "all", sep="_")
         all_harm <- harmonise_data(all_harm, outcome_gwas, 1)
+
+        top_location <- data.frame(
+            "chr"=all_harm[which.min(all_harm$pval.exposure),]$chr.exposure,
+            "start"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) - opt$cis_region, 
+            "end"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) + opt$cis_region
+        )
+        
+        # get area around top exposure gwas for downstream
+        top_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == top_location$chr[1],]
+        top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$pos > top_location$start[1],]
+        top_exposure_gwas <- data.frame(top_exposure_gwas[top_exposure_gwas$pos < top_location$end[1],])
+        top_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% top_exposure_gwas$SNP,])
+        top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$SNP %in% top_outcome_gwas$SNP,]
+
     } else {
         all_harm <- data.frame()
+        top_exposure_gwas <- data.frame()
+        top_outcome_gwas <- data.frame()
     }
 
     cis_harm <- exposure_gwas[exposure_gwas$type == "cis",]
@@ -256,8 +303,12 @@ convert_input_gwas <- function(opt) {
         cis_harm <- data.frame()
     }
 
-    harmonised_results <- list(cis_name=cis_harm, all_name=all_harm)
-    names(harmonised_results) <- c(cis_name, all_name)
+    harmonised_results <- list("cis_name"=cis_harm, "all_name"=all_harm, 
+                               "cis_exposure"=cis_exposure_gwas, "cis_outcome"=cis_outcome_gwas, 
+                               "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas)
+
+    names(harmonised_results) <- return_names
+
 
     return(harmonised_results)
 }
@@ -265,5 +316,6 @@ convert_input_gwas <- function(opt) {
 files_out <- convert_input_gwas(opt)
 
 # save exposure and outcome in harmonised tsmr format for cis, all
-write.csv(files_out[[1]], paste0(names(files_out)[1], ".csv"), row.names = FALSE)
-write.csv(files_out[[2]], paste0(names(files_out)[2], ".csv"), row.names = FALSE)
+for (i in 1:length(files_out)) {
+    write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)
+}

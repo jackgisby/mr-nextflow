@@ -3,7 +3,7 @@
 
 process GET_INPUT_VARIANTS {
 
-    label 'short_plink'
+    label 'plink_short'
     publishDir "$params.outdir/harmonised_data/", mode: params.publish_dir_mode
 
     input:
@@ -12,8 +12,10 @@ process GET_INPUT_VARIANTS {
     output:
     path "*_cis_harm.csv", emit: cis_harm
     path "*_all_harm.csv",  emit: all_harm
-    // path "*_cis_location.csv", emit: cis_location
-    // path "*_top_location.csv", emit: top_location
+    path "*_cis_exposure.csv", emit: cis_exposure
+    path "*_cis_outcome.csv", emit: cis_outcome
+    path "*_top_exposure.csv", emit: top_exposure
+    path "*_top_outcome.csv", emit: top_outcome
 
     script:  // many arguments so we can pass the column names of these files
     """

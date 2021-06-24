@@ -290,7 +290,8 @@ ld_matrix_modified <- function(
     linkage_file=NULL,  # list of bfile locations for each chromosome
     with_alleles=TRUE, 
     pop="EUR", 
-    plink_bin=NULL
+    plink_bin=NULL,
+    plink_memory=5000
 )  {
     if (length(variants) > 500 & is.null(linkage_file)) {
         stop("SNP list must be smaller than 500. Try running locally by providing local ld reference with bfile argument. See vignettes for a guide on how to do this.")
@@ -302,12 +303,16 @@ ld_matrix_modified <- function(
     
     if (!is.null(linkage_file)) {
         
-        chr_out <- ld_matrix_local_modified(variants, bfile=linkage_file[[chr]], plink_bin=plink_bin, with_alleles=with_alleles)
+        if (is.null(chr)) {  # chr given if linkage_file is a list of file locations - can use chr to select relevant file
+            LD <- ld_matrix_local_modified(variants, bfile=linkage_file, plink_bin=plink_bin, with_alleles=with_alleles, plink_memory=plink_memory)
+        } else {
+            LD <- ld_matrix_local_modified(variants, bfile=linkage_file[[chr]], plink_bin=plink_bin, with_alleles=with_alleles, plink_memory=plink_memory)
+        }
         
-        return(chr_out)
+        return(LD)
     }
     
-    res <- ieugwasr::api_query('ld/matrix', query = list(rsid = variants, pop = pop), access_token=NULL) %>% ieugwasr::get_query_content()
+    res <- ieugwasr::get_query_content(ieugwasr::api_query('ld/matrix', query = list(rsid = variants, pop = pop), access_token=NULL))
     
     if (all(is.na(res))) {
         stop("None of the requested variants were found")
@@ -341,7 +346,8 @@ ld_matrix_modified <- function(
 multi_chr_ld_matrix <- function(
     x, 
     linkage_file=NULL,  # list of bfile locations for each chromosome
-    plink_bin=NULL
+    plink_bin=NULL,
+    plink_memory=5000
 ) {
     if (is.null(linkage_file)) {
         return(ld_matrix_modified(x$SNP, NULL, with_alleles = TRUE, linkage_file = linkage_file, plink_bin = plink_bin))
@@ -349,28 +355,30 @@ multi_chr_ld_matrix <- function(
     
     LD <- matrix(nrow=0, ncol=0)
     
-    for (chr in as.integer(unique(x$chr.exposure))) {
-        LD_chr <- ld_matrix_modified(x$SNP[x$chr.exposure == chr], chr,
-                                     linkage_file=linkage_file,  # list of bfile locations for each chromosome
-                                     with_alleles=TRUE, plink_bin=plink_bin)
-        
-        if (ncol(LD) > 0) {
+    if (typeof(linkage_file) == "list") {  # list of linkage files, one for each chromosome
+
+        for (chr in as.integer(unique(x$chr.exposure))) {
+            LD_chr <- ld_matrix_modified(x$SNP[x$chr.exposure == chr], chr,
+                                        linkage_file=linkage_file,  # list of bfile locations for each chromosome
+                                        with_alleles=TRUE, plink_bin=plink_bin)
             
-            new_names <- c(colnames(LD), colnames(LD_chr))
-            
-            LD_chr <- cbind(matrix(0, nrow=nrow(LD_chr), ncol=nrow(LD)), LD_chr)
-            LD <- cbind(LD, matrix(0, nrow=nrow(LD), ncol=nrow(LD_chr)))
-            LD <- rbind(LD, LD_chr)
-            
-            colnames(LD) <- new_names
-            rownames(LD) <- new_names
-            
-        } else {
-            LD <- LD_chr
+            if (ncol(LD) > 0) {
+                
+                new_names <- c(colnames(LD), colnames(LD_chr))
+                
+                LD_chr <- cbind(matrix(0, nrow=nrow(LD_chr), ncol=nrow(LD)), LD_chr)
+                LD <- cbind(LD, matrix(0, nrow=nrow(LD), ncol=nrow(LD_chr)))
+                LD <- rbind(LD, LD_chr)
+                
+                colnames(LD) <- new_names
+                rownames(LD) <- new_names
+                
+            } else {
+                LD <- LD_chr
+            }
         }
-        
     }
-    
+
     return(LD)
 }
 
@@ -412,7 +420,7 @@ ld_matrix_local_modified <- function(variants, bfile, plink_bin, with_alleles=FA
     )
     
     system(fun2)
-    res <- read.table(paste0(fn, ".ld"), header=FALSE) %>% as.matrix
+    res <- as.matrix(read.table(paste0(fn, ".ld"), header=FALSE))
     
     if (with_alleles) {
         rownames(res) <- colnames(res) <- paste(bim$V2, bim$V5, bim$V6, sep="_")
