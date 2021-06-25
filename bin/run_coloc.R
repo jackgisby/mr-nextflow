@@ -26,30 +26,44 @@ print(opt)
 source(paste0(opt$auxiliary_script_dir, "/coloc.R"))
 source(paste0(opt$auxiliary_script_dir, "/linkage.R"))
 
+get_blank_return <- function() {
+
+    susie_coloc_result_colnames <- c("nsnps", "hit1", "hit2", "PP.H0.abf", "PP.H1.abf", "PP.H2.abf", "PP.H3.abf", "PP.H4.abf", "idx1", "idx2", "exposure", "to", "from", "region_width", "nsnps")
+    susie_coloc_summary <- data.frame(matrix(ncol = length(susie_coloc_result_colnames), nrow=0))
+    colnames(susie_coloc_summary) <- susie_coloc_result_colnames
+
+    coloc_result_colnames <- c("PP.H0.abf", "PP.H1.abf", "PP.H2.abf", "PP.H3.abf", "PP.H4.abf", "p12", "pass", "exposure", "to", "from", "region_width")
+    coloc_summary <- data.frame(matrix(ncol = length(coloc_result_colnames), nrow=0))
+    colnames(coloc_summary) <- coloc_result_colnames
+
+    return(list("standard_coloc"=coloc_summary, "standard_obj"=data.frame(), "coloc_coloc"=susie_coloc_summary, "coloc_obj"=data.frame()))
+}
+
 run_coloc <- function(opt) {
 
     region_name <- gsub(".csv", "", gsub("_exposure", "", opt$exposure_input_data))
 
-    exposure <- read.csv(opt$exposure_input_data)
+    exposure <- data.frame(readr::read_csv(opt$exposure_input_data))
     print("exposure")
     print(head(exposure))
 
-    outcome <- read.csv(opt$outcome_input_data)
+    outcome <- data.frame(readr::read_csv(opt$outcome_input_data))
     print("outcome")
     print(head(outcome))
 
-    LD <- as.matrix(read.csv(opt$LD))
+    LD <- as.matrix(readr::read_csv(opt$LD))
     print("LD")
     print(LD)
-    rownames(LD) <- colnames(LD)
 
-    return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_abf"), paste0(region_name, "_coloc_susie_obj"))
-    null_return <- list("standard_coloc"=data.frame(), "standard_obj"=data.frame(), "susie_abf"=data.frame(), "susie_obj"=data.frame())
+    return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_res"), paste0(region_name, "_coloc_susie_obj"))
+    null_return <- get_blank_return()
     names(null_return) <- return_names
 
     if (nrow(outcome) == 0 & nrow(exposure) == 0) {
         return(null_return)
     }
+
+    rownames(LD) <- colnames(LD)
 
     chr <- exposure$chr[1]
     to <- max(exposure$pos)
@@ -71,10 +85,14 @@ run_coloc <- function(opt) {
     outcome_run_susie <- runsusie(outcome_in_ld)
 
     susie_coloc_res <- coloc.susie(exposure_run_susie, outcome_run_susie)
-    susie_coloc_abf <- susie_coloc_res$results
+    if (typeof(susie_coloc_res) == "list" & length(susie_coloc_res) == 3) {
+        susie_coloc_abf <- process_sensitivity_data(susie_coloc_res$summary, region_name, to, from, nrow(exposure_in))
+    } else {
+        susie_coloc_abf <- get_blank_return()[["susie_coloc"]]
+    }
 
     # set up final results
-    final_results <- list("standard_coloc"=standard_sensitivity, "standard_obj"=standard_coloc, "susie_abf"=susie_coloc_abf, "susie_obj"=susie_coloc_res)
+    final_results <- list("standard_coloc"=standard_sensitivity, "standard_obj"=standard_coloc, "susie_coloc"=susie_coloc_abf, "susie_obj"=susie_coloc_res)
     names(final_results) <- return_names
 
     return(final_results)

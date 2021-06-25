@@ -11,14 +11,17 @@ process RUN_COLOC {
     file LD
 
     output:
-    path "*_coloc_res.csv"
-    path "*_coloc_susie_abf.csv"
+    path "*_coloc_res.csv", emit: coloc_res
+    path "*_coloc_obj.rds"
+    path "*_coloc_susie_res.csv", emit: coloc_susie_res
+    path "*_coloc_susie_obj.rds"
 
     script:
     """
     echo $exposure_data;
     echo $outcome_data;
-    
+    echo $LD;
+
     Rscript  --verbose $baseDir/bin/run_coloc.R \
              --exposure_input_data '$exposure_data' \
              --outcome_input_data '$outcome_data' \

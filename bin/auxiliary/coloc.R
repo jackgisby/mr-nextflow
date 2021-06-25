@@ -65,9 +65,6 @@ get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
         "snp" = gwas$SNP,
         "position" = gwas$pos
     )
-
-    # print("coloc_in")
-    # print(coloc_in)
     
     if (s != "") {
         coloc_in[["s"]] = as.numeric(s)
@@ -92,7 +89,10 @@ process_sensitivity_data <- function(sensitivity_object, exposure_name, to, from
     sensitivity_object$region_width <- to - from
     # sensitivity_object$p1 = 1e-4
     # sensitivity_object$p2 = 1e-4
-    sensitivity_object$nsnps <- nsnps
+
+    if (!("nsnps" %in% colnames(sensitivity_object))) {
+        sensitivity_object$nsnps <- nsnps
+    }
     
     # # p4 p3 ratio and prior for this
     # sensitivity_object$P4_P3_ratio <- sensitivity_object$PP.H4.abf / sensitivity_object$PP.H3.abf
