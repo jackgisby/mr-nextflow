@@ -49,7 +49,8 @@ workflow MR_COLOC {
         RUN_MR.out.singlesnp.collectFile(name: "singlesnp.csv", keepHeader: true, skip: 1, newLine: false),
         RUN_MR.out.directionality.collectFile(name: "directionality.csv", keepHeader: true, skip: 1, newLine: false),
         RUN_MR.out.heterogeneity.collectFile(name: "heterogeneity.csv", keepHeader: true, skip: 1, newLine: false),
-        RUN_MR.out.pleiotropy.collectFile(name: "pleiotropy.csv", keepHeader: true, skip: 1, newLine: false)
+        RUN_MR.out.pleiotropy.collectFile(name: "pleiotropy.csv", keepHeader: true, skip: 1, newLine: false),
+        RUN_MR.out.mr_results_leaveoneout.collectFile(name: "mr_results_leaveoneout.csv", keepHeader: true, skip: 1, newLine: false)
     )
 
     RUN_COLOC(exposure, outcome, LD)

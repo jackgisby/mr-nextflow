@@ -250,3 +250,57 @@ add_method <- function(collated, full_mr_results, method, join_columns) {
     collated <- dplyr::left_join(collated, results_to_add, by=join_columns)
     return(collated)
 }
+
+remove_snp_from_mrinput <- function(mrinput, snp) {
+
+    mrinput@betaX <- mrinput@betaX[-which(mrinput@snps == snp)]
+    mrinput@betaY <- mrinput@betaY[-which(mrinput@snps == snp)]
+    mrinput@betaXse <- mrinput@betaXse[-which(mrinput@snps == snp)]
+    mrinput@betaYse <- mrinput@betaYse[-which(mrinput@snps == snp)]
+    mrinput@snps <- mrinput@snps[-which(mrinput@snps == snp)]
+    mrinput@effect_allele <- mrinput@effect_allele[-which(mrinput@snps == snp)]
+    mrinput@other_allele <- mrinput@other_allele[-which(mrinput@snps == snp)]
+    mrinput@eaf <- mrinput@eaf[-which(mrinput@snps == snp)]
+
+    mrinput@correlation <- mrinput@correlation[-which(rownames(mrinput@correlation) == snp),]
+    mrinput@correlation <- mrinput@correlation[,-which(colnames(mrinput@correlation) == snp)]
+
+    return(mrinput)
+}
+
+null_mr_results <- function(mr_results, null_return) {
+
+    for (result_type in names(null_return)) {
+
+        if (grepl("leaveoneout", result_type)) {
+            mr_results[[result_type]] <- null_return[[result_type]]
+        }
+    }
+
+    return(mr_results)
+}
+
+add_leaveoneout <- function(mr_results, harm, mrinput, mr_parameters, method_list, null_return) {
+
+    if (nrow(harm) < 3) {
+        return(null_mr_results(mr_results, null_return))
+    }
+
+    mr_results[["mr_results_leaveoneout"]] <- data.frame()
+
+    for (SNP in unique(harm$SNP)) {
+
+        harm_minus_one <- harm[harm$SNP != SNP,]
+        mr_input_minus_one <- remove_snp_from_mrinput(mrinput, SNP)
+
+        leaveoneout_mr_results <- mr(harm_minus_one, parameters = mr_parameters, method_list = method_list)
+        leaveoneout_mr_results$package <- "TwoSampleMR"
+    
+        leaveoneout_mr_results <- add_tests(leaveoneout_mr_results, harm_minus_one, mr_input_minus_one, mr_parameters, method_list)
+        leaveoneout_mr_results[["mr_results"]]$removed_SNP <- SNP
+
+        mr_results[["mr_results_leaveoneout"]] <- rbind(mr_results[["mr_results_leaveoneout"]], leaveoneout_mr_results[["mr_results"]])
+    }
+
+    return(mr_results)
+}

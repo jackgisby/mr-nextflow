@@ -15,6 +15,7 @@ process RUN_MR {
     path "*_directionality.csv", emit: directionality
     path "*_heterogeneity.csv", emit: heterogeneity
     path "*_pleiotropy.csv", emit: pleiotropy
+    path "*_mr_results_leaveoneout.csv", emit: mr_results_leaveoneout
 
     script:
     """

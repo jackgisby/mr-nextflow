@@ -33,6 +33,10 @@ get_blank_return <- function() {
         
         blank_results[[result_type]] <- data.frame(matrix(ncol = length(result_colnames[[result_type]]), nrow = 0))
         colnames(blank_results[[result_type]]) <- result_colnames[[result_type]]
+
+        if (result_type != "singlesnp") {
+            blank_results[[paste0(result_type, "_leaveoneout")]] <- blank_results[[result_type]]
+        }
     }
 
     return(blank_results)
@@ -50,9 +54,8 @@ run_mr <- function(opt) {
     print("mrinput")
     print(names(mrinput))
 
-    return_names <- c(paste0(exposure_name, "_mr_results"), paste0(exposure_name, "_singlesnp"), paste0(exposure_name, "_directionality"), paste0(exposure_name, "_heterogeneity"), paste0(exposure_name, "_pleiotropy"))
     null_return <- get_blank_return()
-    names(null_return) <- return_names
+    names(null_return) <- paste(exposure_name, names(null_return), sep="_")
 
     if (nrow(harm) == 0) {
         return(null_return)
@@ -68,8 +71,11 @@ run_mr <- function(opt) {
     # add MendelianRandomization MR results and sensitivity tests
     mr_results <- add_tests(mr_results, harm, mrinput, mr_parameters, method_list)
 
+    # do leaveoneout approach
+    mr_results <- add_leaveoneout(mr_results, harm, mrinput, mr_parameters, method_list, null_return)
+
     # set up final results
-    names(mr_results) <- return_names
+    names(mr_results) <- paste(exposure_name, names(mr_results), sep="_")
     return(mr_results)
 }
 

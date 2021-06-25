@@ -28,7 +28,7 @@ source(paste0(opt$auxiliary_script_dir, "/linkage.R"))
 
 get_blank_return <- function() {
 
-    susie_coloc_result_colnames <- c("nsnps", "hit1", "hit2", "PP.H0.abf", "PP.H1.abf", "PP.H2.abf", "PP.H3.abf", "PP.H4.abf", "idx1", "idx2", "exposure", "to", "from", "region_width", "nsnps")
+    susie_coloc_result_colnames <- c("nsnps", "hit1", "hit2", "PP.H0.abf", "PP.H1.abf", "PP.H2.abf", "PP.H3.abf", "PP.H4.abf", "idx1", "idx2", "exposure", "to", "from", "region_width")
     susie_coloc_summary <- data.frame(matrix(ncol = length(susie_coloc_result_colnames), nrow=0))
     colnames(susie_coloc_summary) <- susie_coloc_result_colnames
 
@@ -36,7 +36,7 @@ get_blank_return <- function() {
     coloc_summary <- data.frame(matrix(ncol = length(coloc_result_colnames), nrow=0))
     colnames(coloc_summary) <- coloc_result_colnames
 
-    return(list("standard_coloc"=coloc_summary, "standard_obj"=data.frame(), "coloc_coloc"=susie_coloc_summary, "coloc_obj"=data.frame()))
+    return(list("coloc_res"=coloc_summary, "coloc_obj"=data.frame(), "coloc_susie_res"=susie_coloc_summary, "coloc_susie_obj"=data.frame()))
 }
 
 run_coloc <- function(opt) {
@@ -55,9 +55,8 @@ run_coloc <- function(opt) {
     print("LD")
     print(LD)
 
-    return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_res"), paste0(region_name, "_coloc_susie_obj"))
     null_return <- get_blank_return()
-    names(null_return) <- return_names
+    names(null_return) <- paste(region_name, names(null_return), sep="_")
 
     if (nrow(outcome) == 0 & nrow(exposure) == 0) {
         return(null_return)
@@ -86,14 +85,14 @@ run_coloc <- function(opt) {
 
     susie_coloc_res <- coloc.susie(exposure_run_susie, outcome_run_susie)
     if (typeof(susie_coloc_res) == "list" & length(susie_coloc_res) == 3) {
-        susie_coloc_abf <- process_sensitivity_data(susie_coloc_res$summary, region_name, to, from, nrow(exposure_in))
+        susie_coloc_res <- process_sensitivity_data(susie_coloc_res$summary, region_name, to, from, nrow(exposure_in))
     } else {
-        susie_coloc_abf <- get_blank_return()[["susie_coloc"]]
+        susie_coloc_res <- get_blank_return()[["coloc_susie_res"]]
     }
 
     # set up final results
-    final_results <- list("standard_coloc"=standard_sensitivity, "standard_obj"=standard_coloc, "susie_coloc"=susie_coloc_abf, "susie_obj"=susie_coloc_res)
-    names(final_results) <- return_names
+    final_results <- list("coloc_res"=standard_sensitivity, "coloc_obj"=standard_coloc, "coloc_susie_res"=susie_coloc_res, "coloc_susie_obj"=susie_coloc_res)
+    names(final_results) <- paste(region_name, names(final_results), sep="_")
 
     return(final_results)
 }
@@ -103,7 +102,7 @@ files_out <- run_coloc(opt)
 # save exposure and outcome in harmonised tsmr format for cis, all
 
 for (i in 1:length(files_out)) {
-    if (i %in% c(2, 4)) {
+    if (grepl("obj", names(files_out)[i])) {
         saveRDS(files_out[[i]], paste0(names(files_out)[i], ".rds"))
     } else {
         write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)

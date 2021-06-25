@@ -11,6 +11,7 @@ process COLLATE_MR {
     file directionality
     file heterogeneity
     file pleiotropy
+    file mr_results_leaveoneout
 
     output:
     path "*_mr_results.csv"
@@ -19,6 +20,7 @@ process COLLATE_MR {
     path "*_heterogeneity.csv"
     path "*_pleiotropy.csv"
     path "*_full_results.csv"
+    path "*_mr_results_leaveoneout.csv"
 
     script:
     """
@@ -27,6 +29,7 @@ process COLLATE_MR {
     echo $directionality;
     echo $heterogeneity;
     echo $pleiotropy;
+    echo $mr_results_leaveoneout;
     
     Rscript  --verbose $baseDir/bin/collate_mr.R \
              --mr_results '$mr_results' \
@@ -34,6 +37,7 @@ process COLLATE_MR {
              --directionality '$directionality' \
              --heterogeneity '$heterogeneity' \
              --pleiotropy '$pleiotropy' \
+             --mr_results_leaveoneout '$mr_results_leaveoneout' \
              --auxiliary_script_dir '$baseDir/bin/auxiliary' \
              --num_exposures $params.num_exposures ;
     """

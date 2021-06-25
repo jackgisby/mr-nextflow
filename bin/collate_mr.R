@@ -9,6 +9,10 @@ option_list = list(
     make_option(c("--directionality"), type="character", default=NULL),
     make_option(c("--heterogeneity"), type="character", default=NULL),
     make_option(c("--pleiotropy"), type="character", default=NULL),
+    make_option(c("--mr_results_leaveoneout"), type="character", default=NULL),
+    make_option(c("--directionality_leaveoneout"), type="character", default=NULL),
+    make_option(c("--heterogeneity_leaveoneout"), type="character", default=NULL),
+    make_option(c("--pleiotropy_leaveoneout"), type="character", default=NULL),
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character"),
     make_option(c("--num_exposures"), type="integer", default=NULL)
 )
@@ -43,8 +47,12 @@ collate_mr_results <- function(opt) {
     print("pleiotropy")
     print(head(pleiotropy))
 
-    null_return <- list("_mr_results"=data.frame(), "_singlesnp"=data.frame(), "_directionality"=data.frame(), "_heterogeneity"=data.frame(), "_pleiotropy"=data.frame(), "_full_results"=data.frame())
-    
+    mr_results_leaveoneout <- data.frame(readr::read_csv(opt$mr_results_leaveoneout))
+    print("mr_results_leaveoneout")
+    print(head(mr_results_leaveoneout))
+
+    null_return <- list("_mr_results"=data.frame(), "_directionality"=data.frame(), "_heterogeneity"=data.frame(), "_pleiotropy"=data.frame(), "_mr_results_leaveoneout"=data.frame(), "_singlesnp"=data.frame(), "_full_results"=data.frame())
+
     if (nrow(mr_results) == 0) {
         return(null_return)
     }
@@ -56,8 +64,6 @@ collate_mr_results <- function(opt) {
     } else {
         stopifnot(FALSE)
     }
-
-    return_names <- c(paste0(mr_run, "_mr_results"), paste0(mr_run, "_singlesnp"), paste0(mr_run, "_directionality"), paste0(mr_run, "_heterogeneity"), paste0(mr_run, "_pleiotropy"), paste0(mr_run, "_full_results"))
     
     full_results <- get_collated_df(mr_results, opt$num_exposures, directionality, heterogeneity, pleiotropy)
     print("full results")
@@ -65,8 +71,9 @@ collate_mr_results <- function(opt) {
 
     singlesnp <- singlesnp[!grepl("ALL", singlesnp$SNP),]
 
-    final_results <- list("mr_results"=mr_results, "singlesnp"=singlesnp, "directionality"=directionality, "heterogeneity"=heterogeneity, "pleiotropy"=pleiotropy, "full_results"=full_results)
-    names(final_results) <- return_names
+    final_results <- list("mr_results"=mr_results, "directionality"=directionality, "heterogeneity"=heterogeneity, "pleiotropy"=pleiotropy, 
+                          "mr_results_leaveoneout"=mr_results_leaveoneout, "singlesnp"=singlesnp, "full_results"=full_results)
+    names(final_results) <- paste(mr_run, names(final_results), sep="_")
     return(final_results)
 }
 

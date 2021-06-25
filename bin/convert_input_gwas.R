@@ -49,16 +49,13 @@ print(opt)
 
 source(paste0(opt$auxiliary_script_dir, "/linkage.R"))
 
-get_blank_return <- function(gwas_colnames) {
+get_blank_return <- function() {
 
-    harm_df <- data.frame(matrix(ncol = length(gwas_colnames), nrow = 0))
-    colnames(harm_df) <- gwas_colnames
-
-    return(list(cis = harm_df, all = harm_df, 
-                cis_exposure = data.frame(), cis_outcome = data.frame(), 
-                cis_ld = data.frame(), top_exposure = data.frame(), 
-                top_outcome = data.frame(), top_ld = data.frame(), 
-                cis_mrinput = data.frame(), all_mrinput = data.frame()))
+    return(list("cis_harm" = data.frame(), "all_harm" = data.frame(), 
+                "cis_exposure" = data.frame(), "cis_outcome" = data.frame(), 
+                "cis_LD" = data.frame(), "top_exposure" = data.frame(), 
+                "top_outcome" = data.frame(), "top_LD" = data.frame(), 
+                "cis_mrinput" = data.frame(), "all_mrinput" = data.frame()))
 }
 
 convert_input_gwas <- function(opt) {
@@ -70,24 +67,10 @@ convert_input_gwas <- function(opt) {
     stopifnot(nrow(gene_to_filename) == 1)
     exposure_name <- tolower(gene_to_filename$gene_id[1])
 
-    cis_name <- paste(exposure_name, "cis", "harm", sep="_")
-    cis_mrinput_name <- paste(exposure_name, "cis", "mrinput", sep="_")
-
-    all_name <- paste(exposure_name, "all", "harm", sep="_")
-    all_mrinput_name <- paste(exposure_name, "all", "mrinput", sep="_")
-
-    cis_exposure_name <- paste(exposure_name, "cis", "exposure", sep="_")
-    cis_outcome_name <- paste(exposure_name, "cis", "outcome", sep="_")
-    cis_ld_name <- paste(exposure_name, "cis", "LD", sep="_")
-
-    top_exposure_name <- paste(exposure_name, "top", "exposure", sep="_")
-    top_outcome_name <- paste(exposure_name, "top", "outcome", sep="_")
-    top_ld_name <- paste(exposure_name, "top", "LD", sep="_")
+    blank_return <- get_blank_return()
+    names(blank_return) <- paste(exposure_name, names(blank_return), sep="_")
 
     gwas_colnames <- list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr", "pos")
-    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, cis_ld_name, top_exposure_name, top_outcome_name, top_ld_name, cis_mrinput_name, all_mrinput_name)
-    blank_return <- get_blank_return(gwas_colnames)
-    names(blank_return) <- return_names
 
     # load exposure w/ fread
     exposure_gwas <- fread(opt$exposure_input_data)
@@ -365,14 +348,12 @@ convert_input_gwas <- function(opt) {
         cis_mrinput <- data.frame()
     }
 
-    harmonised_results <- list("cis_name"=cis_harm, "all_name"=all_harm, 
+    harmonised_results <- list("cis_harm"=cis_harm, "all_harm"=all_harm, 
                                "cis_exposure"=cis_exposure_gwas, "cis_outcome"=cis_outcome_gwas, "cis_LD"=cis_LD, 
                                "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas, "top_LD"=top_LD,
                                "cis_mrinput"=cis_mrinput, "all_mrinput"=all_mrinput)
 
-    names(harmonised_results) <- return_names
-
-
+    names(harmonised_results) <- paste(exposure_name, names(harmonised_results), sep="_")
     return(harmonised_results)
 }
 
@@ -380,7 +361,7 @@ files_out <- convert_input_gwas(opt)
 
 # save exposure and outcome in harmonised tsmr format for cis, all
 for (i in 1:length(files_out)) {
-    if (i %in% c(9, 10)) {
+    if (grepl("mrinput", names(files_out)[i])) {
         saveRDS(files_out[[i]], paste0(names(files_out)[i], ".rds"))
     } else {
         write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)
