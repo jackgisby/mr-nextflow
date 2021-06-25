@@ -8,11 +8,11 @@ process RUN_COLOC {
     input:
     file exposure_data
     file outcome_data
+    file LD
 
     output:
     path "*_coloc_res.csv"
     path "*_coloc_susie_abf.csv"
-    path "*_LD.csv"
 
     script:
     """
@@ -22,6 +22,7 @@ process RUN_COLOC {
     Rscript  --verbose $baseDir/bin/run_coloc.R \
              --exposure_input_data '$exposure_data' \
              --outcome_input_data '$outcome_data' \
+             --LD '$LD' \
              --auxiliary_script_dir '$baseDir/bin/auxiliary' \
              --exposure_type '$params.coloc.exposure.type' \
              --exposure_s '$params.coloc.exposure.s' \

@@ -11,11 +11,15 @@ process GET_INPUT_VARIANTS {
 
     output:
     path "*_cis_harm.csv", emit: cis_harm
+    // path "*_cis_harm_mrinput.csv", emit: cis_harm_mrinput
     path "*_all_harm.csv",  emit: all_harm
+    // path "*_all_harm_mrinput.csv",  emit: all_harm_mrinput
     path "*_cis_exposure.csv", emit: cis_exposure
     path "*_cis_outcome.csv", emit: cis_outcome
+    path "*_cis_LD.csv", emit: cis_LD
     path "*_top_exposure.csv", emit: top_exposure
     path "*_top_outcome.csv", emit: top_outcome
+    path "*_top_LD.csv", emit: top_LD
 
     script:  // many arguments so we can pass the column names of these files
     """

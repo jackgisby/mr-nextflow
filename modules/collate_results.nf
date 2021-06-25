@@ -1,6 +1,6 @@
 // collate the results
 
-process COLLATE_RESULTS {
+process COLLATE_MR {
 
     label 'short'
 

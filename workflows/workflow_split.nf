@@ -9,10 +9,11 @@ workflow CIS {
     take:
     exposure
     outcome
+    LD
     harm
 
     main:
-    MR_COLOC(exposure, outcome, harm)
+    MR_COLOC(exposure, outcome, LD, harm)
 }
 
 workflow ALL {
@@ -20,10 +21,11 @@ workflow ALL {
     take:
     exposure
     outcome
+    LD
     harm
 
     main:  // same workflow, but can't run same thing twice with same name
-    MR_COLOC(exposure, outcome, harm)
+    MR_COLOC(exposure, outcome, LD, harm)
 }
 
 workflow MR_COLOC {
@@ -31,9 +33,13 @@ workflow MR_COLOC {
     take:
     exposure
     outcome
+    LD
     harm
 
     main:
+    println("hi")
     // RUN_MR(harm)
-    RUN_COLOC(exposure, outcome)
+    // RUN_COLOC(exposure, outcome, LD)
+    // COLLATE_MR
+    // COLLATE_COLOC
 }

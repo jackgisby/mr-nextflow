@@ -62,13 +62,16 @@ convert_input_gwas <- function(opt) {
 
     cis_exposure_name <- paste(exposure_name, "cis", "exposure", sep="_")
     cis_outcome_name <- paste(exposure_name, "cis", "outcome", sep="_")
+    cis_ld_name <- paste(exposure_name, "cis", "LD", sep="_")
+
     top_exposure_name <- paste(exposure_name, "top", "exposure", sep="_")
     top_outcome_name <- paste(exposure_name, "top", "outcome", sep="_")
+    top_ld_name <- paste(exposure_name, "top", "LD", sep="_")
 
-    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, top_exposure_name, top_outcome_name)
+    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, cis_ld_name, top_exposure_name, top_outcome_name, top_ld_name)
     blank_return <- list("cis_name"=data.frame(), "all_name"=data.frame(), 
-                         "cis_exposure"=data.frame(), "cis_outcome"=data.frame(), 
-                         "top_exposure"=data.frame(), "top_outcome"=data.frame())
+                         "cis_exposure"=data.frame(), "cis_outcome"=data.frame(), "cis_LD"=data.frame(), 
+                         "top_exposure"=data.frame(), "top_outcome"=data.frame(), "top_LD"=data.frame())
     names(blank_return) <- return_names
 
     # load exposure w/ fread
@@ -253,6 +256,18 @@ convert_input_gwas <- function(opt) {
             cis_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% cis_exposure_gwas$SNP,])
             cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$SNP %in% cis_outcome_gwas$SNP,]
 
+            chr <- cis_location$chr[1]
+
+            if (typeof(opt$plink_linkage_files) == "character") {
+                chr <- NULL
+            }
+
+            if (length(cis_exposure_gwas$SNP) > 0) {
+                cis_LD = ld_matrix_modified(cis_exposure_gwas$SNP, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
+            } else {
+                cis_LD <- data.frame()
+            }
+
         } else {
             cis_exposure_gwas <- data.frame()
             cis_outcome_gwas <- data.frame()
@@ -285,8 +300,21 @@ convert_input_gwas <- function(opt) {
         top_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == top_location$chr[1],]
         top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$pos > top_location$start[1],]
         top_exposure_gwas <- data.frame(top_exposure_gwas[top_exposure_gwas$pos < top_location$end[1],])
+
         top_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% top_exposure_gwas$SNP,])
         top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$SNP %in% top_outcome_gwas$SNP,]
+
+        chr <- top_location$chr[1]
+
+        if (typeof(opt$plink_linkage_files) == "character") {
+            chr <- NULL
+        }
+
+        if (length(top_exposure_gwas$SNP) > 0) {
+            top_LD = ld_matrix_modified(top_exposure_gwas$SNP, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
+        } else {
+            top_LD <- data.frame()
+        }
 
     } else {
         all_harm <- data.frame()
@@ -299,13 +327,19 @@ convert_input_gwas <- function(opt) {
     if (nrow(cis_harm) > 0) {
         cis_harm$exposure <- paste(exposure_name, "cis", sep="_")
         cis_harm <- harmonise_data(cis_harm, outcome_gwas, 1)
+
+        cis_mrinput <- dat_to_MRInput_modified(cis_harm, get_correlations = get_correlations, 
+                                               linkage_file = linkage_file, plink_bin = plink_bin)[[1]]
+
+        print(cis_mrinput)
+        
     } else {
         cis_harm <- data.frame()
     }
 
     harmonised_results <- list("cis_name"=cis_harm, "all_name"=all_harm, 
-                               "cis_exposure"=cis_exposure_gwas, "cis_outcome"=cis_outcome_gwas, 
-                               "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas)
+                               "cis_exposure"=cis_exposure_gwas, "cis_outcome"=cis_outcome_gwas, "cis_LD"=cis_LD, 
+                               "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas, "top_LD"=top_LD)
 
     names(harmonised_results) <- return_names
 

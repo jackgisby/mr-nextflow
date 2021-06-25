@@ -7,6 +7,7 @@ library("susieR")
 option_list = list(
     make_option(c("--exposure_input_data"), type="character", default=NULL, help="exposure input file name", metavar="character"),
     make_option(c("--outcome_input_data"), type="character", default=NULL, help="outcome input file name", metavar="character"),
+    make_option(c("--LD"), type="character", default=NULL, help="linkage disequilibrium matrix", metavar="character"),
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character"),
     make_option(c("--exposure_type"), type="character", default=NULL),
     make_option(c("--exposure_s"), type="character", default=NULL),
@@ -41,11 +42,15 @@ run_coloc <- function(opt) {
     print("outcome")
     print(head(outcome))
 
-    return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_abf"), paste0(region_name, "_coloc_susie_obj"), paste0(region_name, "_LD"))
-    null_return <- list("standard_coloc"=data.frame(), "standard_obj"=data.frame(), "susie_abf"=data.frame(), "susie_obj"=data.frame(), "LD"=data.frame())
+    LD <- as.matrix(read.csv(opt$LD))
+    print("LD")
+    print(LD)
+
+    return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_abf"), paste0(region_name, "_coloc_susie_obj"))
+    null_return <- list("standard_coloc"=data.frame(), "standard_obj"=data.frame(), "susie_abf"=data.frame(), "susie_obj"=data.frame())
     names(null_return) <- return_names
 
-    if (nrow(outcome) == 0 | nrow(exposure) == 0) {
+    if (nrow(outcome) == 0 & nrow(exposure) == 0) {
         return(null_return)
     }
 
@@ -62,12 +67,6 @@ run_coloc <- function(opt) {
     standard_sensitivity <- sensitivity(standard_coloc, rule = "H4 > 0.5")
     standard_sensitivity <- process_sensitivity_data(standard_sensitivity, region_name, to, from, nrow(exposure_in))
 
-    # get ld matrix
-    if (typeof(opt$plink_linkage_files) == "character") {
-        chr <- NULL
-    }
-
-    LD = ld_matrix_modified(outcome_in$snp, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
     exposure_in_ld <- get_coloc_list(exposure, list_type = opt$exposure_type, s = opt$exposure_s, sdy = opt$exposure_sdy, LD=LD)
     outcome_in_ld <- get_coloc_list(outcome, list_type = opt$outcome_type, s = opt$outcome_s, sdy = opt$outcome_sdy, LD=LD)
 
@@ -78,7 +77,7 @@ run_coloc <- function(opt) {
     susie_coloc_abf <- susie_coloc_res$results
 
     # set up final results
-    final_results <- list("standard_coloc"=standard_sensitivity, "standard_obj"=standard_coloc, "susie_abf"=susie_coloc_abf, "susie_obj"=susie_coloc_res, "LD"=LD)
+    final_results <- list("standard_coloc"=standard_sensitivity, "standard_obj"=standard_coloc, "susie_abf"=susie_coloc_abf, "susie_obj"=susie_coloc_res)
     names(final_results) <- return_names
 
     return(final_results)
@@ -89,7 +88,6 @@ files_out <- run_coloc(opt)
 # save exposure and outcome in harmonised tsmr format for cis, all
 write.csv(files_out[[1]], paste0(names(files_out)[1], ".csv"), row.names = FALSE)
 write.csv(files_out[[3]], paste0(names(files_out)[3], ".csv"), row.names = FALSE)
-write.csv(files_out[[5]], paste0(names(files_out)[5], ".csv"), row.names = FALSE)
 
 saveRDS(files_out[[2]], paste0(names(files_out)[2], ".rds"))
 saveRDS(files_out[[4]], paste0(names(files_out)[4], ".rds"))
