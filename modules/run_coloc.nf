@@ -2,7 +2,7 @@
 
 process RUN_COLOC {
 
-    label 'plink_long'
+    label 'long'
     publishDir "$params.outdir/coloc/", mode: params.publish_dir_mode
 
     input:
@@ -29,10 +29,6 @@ process RUN_COLOC {
              --exposure_sdy '$params.coloc.exposure.sdy' \
              --outcome_type '$params.coloc.outcome.type' \
              --outcome_s '$params.coloc.outcome.s' \
-             --outcome_sdy '$params.coloc.outcome.sdy' \
-             --plink_bin '$params.plink.bin' \
-             --plink_linkage_files '$params.plink.linkage_files' \
-             --plink_memory $params.plink.matrix_memory \
-             --nref $params.coloc.nref ;
+             --outcome_sdy '$params.coloc.outcome.sdy' ;
     """
 }

@@ -11,9 +11,10 @@ workflow CIS {
     outcome
     LD
     harm
+    mrinput
 
     main:
-    MR_COLOC(exposure, outcome, LD, harm)
+    MR_COLOC(exposure, outcome, LD, harm, mrinput)
 }
 
 workflow ALL {
@@ -23,9 +24,10 @@ workflow ALL {
     outcome
     LD
     harm
+    mrinput
 
     main:  // same workflow, but can't run same thing twice with same name
-    MR_COLOC(exposure, outcome, LD, harm)
+    MR_COLOC(exposure, outcome, LD, harm, mrinput)
 }
 
 workflow MR_COLOC {
@@ -35,11 +37,11 @@ workflow MR_COLOC {
     outcome
     LD
     harm
+    mrinput
 
     main:
-    println("hi")
-    // RUN_MR(harm)
-    // RUN_COLOC(exposure, outcome, LD)
+    RUN_MR(harm, mrinput)
+    RUN_COLOC(exposure, outcome, LD)
     // COLLATE_MR
     // COLLATE_COLOC
 }

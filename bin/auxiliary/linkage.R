@@ -353,9 +353,9 @@ multi_chr_ld_matrix <- function(
         return(ld_matrix_modified(x$SNP, NULL, with_alleles = TRUE, linkage_file = linkage_file, plink_bin = plink_bin))
     }
     
-    LD <- matrix(nrow=0, ncol=0)
-    
     if (typeof(linkage_file) == "list") {  # list of linkage files, one for each chromosome
+
+        LD <- matrix(nrow=0, ncol=0)
 
         for (chr in as.integer(unique(x$chr.exposure))) {
             LD_chr <- ld_matrix_modified(x$SNP[x$chr.exposure == chr], chr,
@@ -377,7 +377,12 @@ multi_chr_ld_matrix <- function(
                 LD <- LD_chr
             }
         }
+    } else if (typeof(linkage_file) == "character") {
+        LD <- ld_matrix_modified(x$SNP, NULL, linkage_file=linkage_file,  # list of bfile locations for each chromosome
+                                 with_alleles=TRUE, plink_bin=plink_bin)
     }
+
+    stopifnot(colnames(LD) == rownames(LD))
 
     return(LD)
 }

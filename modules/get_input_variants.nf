@@ -3,7 +3,7 @@
 
 process GET_INPUT_VARIANTS {
 
-    label 'plink_short'
+    label 'plink'
     publishDir "$params.outdir/harmonised_data/", mode: params.publish_dir_mode
 
     input:
@@ -11,9 +11,9 @@ process GET_INPUT_VARIANTS {
 
     output:
     path "*_cis_harm.csv", emit: cis_harm
-    // path "*_cis_harm_mrinput.csv", emit: cis_harm_mrinput
+    path "*_cis_mrinput.rds", emit: cis_mrinput
     path "*_all_harm.csv",  emit: all_harm
-    // path "*_all_harm_mrinput.csv",  emit: all_harm_mrinput
+    path "*_all_mrinput.rds",  emit: all_mrinput
     path "*_cis_exposure.csv", emit: cis_exposure
     path "*_cis_outcome.csv", emit: cis_outcome
     path "*_cis_LD.csv", emit: cis_LD
@@ -30,7 +30,8 @@ process GET_INPUT_VARIANTS {
              --outcome_input_data '$params.outcome.input_data' \
              --p_cutoff $params.p_cutoff \
              --auxiliary_script_dir '$baseDir/bin/auxiliary' \
-             --cis_region '$params.cis_region' \
+             --cis_region $params.cis_region \
+             --coloc_region $params.coloc.bases \
              --plink_memory $params.plink.clump_memory \
              --plink_clump_r2 $params.plink.clump_r2 \
              --plink_clump_kb $params.plink.clump_kb \

@@ -10,6 +10,7 @@ option_list = list(
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character"),
     make_option(c("--p_cutoff"), type="numeric", default=NULL),
     make_option(c("--cis_region"), type="numeric", default=NULL),
+    make_option(c("--coloc_region"), type="numeric", default=NULL),
     make_option(c("--plink_memory"), type="numeric", default=NULL),
     make_option(c("--plink_clump_r2"), type="numeric", default=NULL),
     make_option(c("--plink_clump_kb"), type="numeric", default=NULL),
@@ -58,7 +59,10 @@ convert_input_gwas <- function(opt) {
     exposure_name <- tolower(gene_to_filename$gene_id[1])
 
     cis_name <- paste(exposure_name, "cis", "harm", sep="_")
+    cis_mrinput_name <- paste(exposure_name, "cis", "mrinput", sep="_")
+
     all_name <- paste(exposure_name, "all", "harm", sep="_")
+    all_mrinput_name <- paste(exposure_name, "all", "mrinput", sep="_")
 
     cis_exposure_name <- paste(exposure_name, "cis", "exposure", sep="_")
     cis_outcome_name <- paste(exposure_name, "cis", "outcome", sep="_")
@@ -68,10 +72,11 @@ convert_input_gwas <- function(opt) {
     top_outcome_name <- paste(exposure_name, "top", "outcome", sep="_")
     top_ld_name <- paste(exposure_name, "top", "LD", sep="_")
 
-    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, cis_ld_name, top_exposure_name, top_outcome_name, top_ld_name)
+    return_names <- c(cis_name, all_name, cis_exposure_name, cis_outcome_name, cis_ld_name, top_exposure_name, top_outcome_name, top_ld_name, cis_mrinput_name, all_mrinput_name)
     blank_return <- list("cis_name"=data.frame(), "all_name"=data.frame(), 
                          "cis_exposure"=data.frame(), "cis_outcome"=data.frame(), "cis_LD"=data.frame(), 
-                         "top_exposure"=data.frame(), "top_outcome"=data.frame(), "top_LD"=data.frame())
+                         "top_exposure"=data.frame(), "top_outcome"=data.frame(), "top_LD"=data.frame(),
+                         "cis_mrinput"=data.frame(), "all_mrinput"=data.frame())
     names(blank_return) <- return_names
 
     # load exposure w/ fread
@@ -248,15 +253,21 @@ convert_input_gwas <- function(opt) {
                                exposure_gwas$pos.exposure > cis_location$start[1] & 
                                exposure_gwas$pos.exposure < cis_location$end[1]
             ] <- "cis"
+
+            cis_location_coloc <- data.frame(
+                "chr"=act_map$chromosome_name,
+                "start"=act_map$start_position - opt$coloc_region, 
+                "end"=act_map$end_position + opt$coloc_region
+            )
             
             # get all cis region variants for downstream
-            cis_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == cis_location$chr[1],]
-            cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$pos > cis_location$start[1],]
-            cis_exposure_gwas <- data.frame(cis_exposure_gwas[cis_exposure_gwas$pos < cis_location$end[1],])
+            cis_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == cis_location_coloc$chr[1],]
+            cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$pos > cis_location_coloc$start[1],]
+            cis_exposure_gwas <- data.frame(cis_exposure_gwas[cis_exposure_gwas$pos < cis_location_coloc$end[1],])
             cis_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% cis_exposure_gwas$SNP,])
             cis_exposure_gwas <- cis_exposure_gwas[cis_exposure_gwas$SNP %in% cis_outcome_gwas$SNP,]
 
-            chr <- cis_location$chr[1]
+            chr <- cis_location_coloc$chr[1]
 
             if (typeof(opt$plink_linkage_files) == "character") {
                 chr <- NULL
@@ -290,21 +301,21 @@ convert_input_gwas <- function(opt) {
         all_harm$exposure <- paste(exposure_name, "all", sep="_")
         all_harm <- harmonise_data(all_harm, outcome_gwas, 1)
 
-        top_location <- data.frame(
+        top_location_coloc <- data.frame(
             "chr"=all_harm[which.min(all_harm$pval.exposure),]$chr.exposure,
-            "start"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) - opt$cis_region, 
-            "end"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) + opt$cis_region
+            "start"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) - opt$coloc_region, 
+            "end"=as.integer(all_harm[which.min(all_harm$pval.exposure),]$pos.exposure) + opt$coloc_region
         )
         
         # get area around top exposure gwas for downstream
-        top_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == top_location$chr[1],]
-        top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$pos > top_location$start[1],]
-        top_exposure_gwas <- data.frame(top_exposure_gwas[top_exposure_gwas$pos < top_location$end[1],])
+        top_exposure_gwas <- entire_exposure_gwas[entire_exposure_gwas$chr == top_location_coloc$chr[1],]
+        top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$pos > top_location_coloc$start[1],]
+        top_exposure_gwas <- data.frame(top_exposure_gwas[top_exposure_gwas$pos < top_location_coloc$end[1],])
 
         top_outcome_gwas <- data.frame(entire_outcome_gwas[entire_outcome_gwas$SNP %in% top_exposure_gwas$SNP,])
         top_exposure_gwas <- top_exposure_gwas[top_exposure_gwas$SNP %in% top_outcome_gwas$SNP,]
 
-        chr <- top_location$chr[1]
+        chr <- top_location_coloc$chr[1]
 
         if (typeof(opt$plink_linkage_files) == "character") {
             chr <- NULL
@@ -316,8 +327,13 @@ convert_input_gwas <- function(opt) {
             top_LD <- data.frame()
         }
 
+        # get mrinput
+        all_mrinput <- dat_to_MRInput_modified(all_harm, get_correlations = TRUE, 
+                                               linkage_file = opt$plink_linkage_files, plink_bin = opt$plink_bin)[[1]]
+
     } else {
         all_harm <- data.frame()
+        all_mrinput <- data.frame()
         top_exposure_gwas <- data.frame()
         top_outcome_gwas <- data.frame()
     }
@@ -328,18 +344,20 @@ convert_input_gwas <- function(opt) {
         cis_harm$exposure <- paste(exposure_name, "cis", sep="_")
         cis_harm <- harmonise_data(cis_harm, outcome_gwas, 1)
 
-        cis_mrinput <- dat_to_MRInput_modified(cis_harm, get_correlations = get_correlations, 
-                                               linkage_file = linkage_file, plink_bin = plink_bin)[[1]]
+        cis_mrinput <- dat_to_MRInput_modified(cis_harm, get_correlations = TRUE, 
+                                               linkage_file = opt$plink_linkage_files, plink_bin = opt$plink_bin)[[1]]
 
         print(cis_mrinput)
-        
+
     } else {
         cis_harm <- data.frame()
+        cis_mrinput <- data.frame()
     }
 
     harmonised_results <- list("cis_name"=cis_harm, "all_name"=all_harm, 
                                "cis_exposure"=cis_exposure_gwas, "cis_outcome"=cis_outcome_gwas, "cis_LD"=cis_LD, 
-                               "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas, "top_LD"=top_LD)
+                               "top_exposure"=top_exposure_gwas, "top_outcome"=top_outcome_gwas, "top_LD"=top_LD,
+                               "cis_mrinput"cis_mrinput, "all_mrinput"=all_mrinput)
 
     names(harmonised_results) <- return_names
 
@@ -351,5 +369,9 @@ files_out <- convert_input_gwas(opt)
 
 # save exposure and outcome in harmonised tsmr format for cis, all
 for (i in 1:length(files_out)) {
-    write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)
+    if (i in c(9, 10)) {
+        saveRDS(files_out[[i]], paste0(names(files_out)[i], ".rds"))
+    } else {
+        write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)
+    }
 }

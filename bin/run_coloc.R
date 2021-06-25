@@ -14,11 +14,7 @@ option_list = list(
     make_option(c("--exposure_sdy"), type="character", default=NULL),
     make_option(c("--outcome_type"), type="character", default=NULL),
     make_option(c("--outcome_s"), type="character", default=NULL),
-    make_option(c("--outcome_sdy"), type="character", default=NULL),
-    make_option(c("--nref"), type="numeric", default=NULL),
-    make_option(c("--plink_linkage_files"), type="character", default=NULL),
-    make_option(c("--plink_bin"), type="character", default=NULL),
-    make_option(c("--plink_memory"), type="numeric", default=NULL)
+    make_option(c("--outcome_sdy"), type="character", default=NULL)
 )
  
 opt_parser = OptionParser(option_list=option_list)
@@ -45,6 +41,7 @@ run_coloc <- function(opt) {
     LD <- as.matrix(read.csv(opt$LD))
     print("LD")
     print(LD)
+    rownames(LD) <- colnames(LD)
 
     return_names <- c(paste0(region_name, "_coloc_res"), paste0(region_name, "_coloc_obj"), paste0(region_name, "_coloc_susie_abf"), paste0(region_name, "_coloc_susie_obj"))
     null_return <- list("standard_coloc"=data.frame(), "standard_obj"=data.frame(), "susie_abf"=data.frame(), "susie_obj"=data.frame())
@@ -86,8 +83,11 @@ run_coloc <- function(opt) {
 files_out <- run_coloc(opt)
 
 # save exposure and outcome in harmonised tsmr format for cis, all
-write.csv(files_out[[1]], paste0(names(files_out)[1], ".csv"), row.names = FALSE)
-write.csv(files_out[[3]], paste0(names(files_out)[3], ".csv"), row.names = FALSE)
 
-saveRDS(files_out[[2]], paste0(names(files_out)[2], ".rds"))
-saveRDS(files_out[[4]], paste0(names(files_out)[4], ".rds"))
+for (i in 1:length(files_out)) {
+    if (i %in% c(2, 4)) {
+        saveRDS(files_out[[i]], paste0(names(files_out)[i], ".rds"))
+    } else {
+        write.csv(files_out[[i]], paste0(names(files_out)[i], ".csv"), row.names = FALSE)
+    }
+}
