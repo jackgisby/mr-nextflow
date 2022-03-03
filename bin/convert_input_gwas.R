@@ -95,6 +95,7 @@ convert_input_gwas <- function(opt) {
     exposure_cols = gwas_colnames
     names(exposure_cols) <- old_exposure_cols
 
+    print(paste("these columns are not in the exposure GWAS: ", exposure_cols[!(names(exposure_cols) %in% ..old_exposure_cols)]))
     exposure_cols <- exposure_cols[names(exposure_cols) %in% colnames(exposure_gwas)]
 
     # select exposure columns
@@ -161,7 +162,8 @@ convert_input_gwas <- function(opt) {
 
     outcome_cols = gwas_colnames
     names(outcome_cols) <- old_outcome_cols
-    
+
+    print(paste("these columns are not in the outcome GWAS: ", outcome_cols[!(names(outcome_cols) %in% ..old_outcome_cols)]))
     outcome_cols <- outcome_cols[names(outcome_cols) %in% ..old_outcome_cols]
 
     # select outcome columns
