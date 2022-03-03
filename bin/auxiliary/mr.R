@@ -200,7 +200,10 @@ add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
     ))
 }
 
-get_collated_df <- function(mr_results, num_exposures, directionality, heterogeneity, pleiotropy) {
+get_collated_df <- function(mr_results, gene_filenames, directionality, heterogeneity, pleiotropy) {
+
+    gene_filenames <- data.table::fread(gene_filenames)
+    num_exposures <- nrow(gene_filenames)
 
     collated <- mr_results
     sensitivity_join_columns <- c("id.exposure"="id.exposure", "id.outcome"="id.outcome", "outcome"="outcome", "exposure"="exposure", "package"="package")

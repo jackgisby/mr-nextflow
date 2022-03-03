@@ -14,7 +14,7 @@ option_list = list(
     make_option(c("--heterogeneity_leaveoneout"), type="character", default=NULL),
     make_option(c("--pleiotropy_leaveoneout"), type="character", default=NULL),
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character"),
-    make_option(c("--num_exposures"), type="integer", default=NULL)
+    make_option(c("--gene_filenames"), type="integer", default=NULL)
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -65,7 +65,7 @@ collate_mr_results <- function(opt) {
         stopifnot(FALSE)
     }
     
-    full_results <- get_collated_df(mr_results, opt$num_exposures, directionality, heterogeneity, pleiotropy)
+    full_results <- get_collated_df(mr_results, opt$gene_filenames, directionality, heterogeneity, pleiotropy)
     print("full results")
     print(head(full_results))
 

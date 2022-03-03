@@ -39,7 +39,7 @@ process COLLATE_MR {
              --pleiotropy '$pleiotropy' \
              --mr_results_leaveoneout '$mr_results_leaveoneout' \
              --auxiliary_script_dir '$baseDir/bin/auxiliary' \
-             --num_exposures $params.num_exposures ;
+             --gene_filenames $params.gene_to_filenames ;
     """
 }
 
