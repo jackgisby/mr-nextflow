@@ -62,7 +62,7 @@ convert_input_gwas <- function(opt) {
 
     # get gene name
     gene_to_filename <- data.frame(fread(opt$gene_filenames))
-    gene_to_filename <- gene_to_filename[gene_to_filename$filename == opt$exposure_input_data,]
+    gene_to_filename <- gene_to_filename[gene_to_filename$filename == opt$exposure_input_data ,]
 
     stopifnot(nrow(gene_to_filename) == 1)
     exposure_name <- tolower(gene_to_filename$gene_id[1])
@@ -79,7 +79,6 @@ convert_input_gwas <- function(opt) {
     print(head(exposure_gwas))
 
     # make list to map exposure colnames
-    exposure_cols = gwas_colnames
     old_exposure_cols <- c(
         opt$exposure_snp_col, 
         opt$exposure_beta_col, 
@@ -92,7 +91,11 @@ convert_input_gwas <- function(opt) {
         opt$exposure_chr_col, 
         opt$exposure_pos_col
     )
+
+    exposure_cols = gwas_colnames
     names(exposure_cols) <- old_exposure_cols
+
+    exposure_cols <- exposure_cols[names(exposure_cols) %in% colnames(exposure_gwas)]
 
     # select exposure columns
     exposure_gwas <- exposure_gwas[, ..old_exposure_cols]
@@ -143,7 +146,6 @@ convert_input_gwas <- function(opt) {
     outcome_gwas <- fread(opt$outcome_input_data)
 
     # make colname list using input options
-    outcome_cols = gwas_colnames
     old_outcome_cols <- c(
         opt$outcome_snp_col, 
         opt$outcome_beta_col, 
@@ -156,7 +158,11 @@ convert_input_gwas <- function(opt) {
         opt$outcome_chr_col, 
         opt$outcome_pos_col
     )
+
+    outcome_cols = gwas_colnames
     names(outcome_cols) <- old_outcome_cols
+    
+    outcome_cols <- outcome_cols[names(outcome_cols) %in% ..old_outcome_cols]
 
     # select outcome columns
     outcome_gwas <- outcome_gwas[, ..old_outcome_cols]
