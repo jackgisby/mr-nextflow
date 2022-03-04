@@ -58,6 +58,60 @@ get_blank_return <- function() {
                 "cis_mrinput" = data.frame(), "all_mrinput" = data.frame()))
 }
 
+
+read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
+    
+    # load w/ fread
+    gwas <- fread(opt[[paste0(outcome_or_exposure, "outcome_input_data")]])
+
+    print(paste0("load ", outcome_or_exposure))
+    print(head(gwas))
+
+    # make colname list using input options
+    old_outcome_cols <- c(
+        opt[[paste0(outcome_or_exposure, "_snp_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_beta_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_se_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_eaf_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_effect_allele_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_other_allele_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_pval_col")]],
+        opt[[paste0(outcome_or_exposure, "outcome_samplesize_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_chr_col")]], 
+        opt[[paste0(outcome_or_exposure, "outcome_pos_col")]]
+    )
+
+    new_cols = gwas_colnames
+    names(new_cols) <- old_cols
+
+    print(paste("these columns are not in the outcome GWAS: ", new_cols[!(old_cols %in% colnames(gwas))]))
+    new_cols <- new_cols[old_cols %in% colnames(gwas)]
+
+    # select outcome columns
+    gwas <- gwas[, ..old_cols]
+
+    print(paste0("selected ", outcome_or_exposure, " colnames"))
+    print(head(gwas))
+
+    # change outcome colnames
+    for (old_name in old_cols) {
+        setnames(gwas, old_name, new_cols[[old_name]])
+    }
+
+    print(paste0("change ", outcome_or_exposure, " colnames"))
+    print(head(gwas))
+
+    # remove invalid entries
+    gwas <- gwas[gwas$SNP != ".",]
+    gwas <- gwas[gwas$SNP != "",]
+    gwas <- gwas[!is.na(gwas$pval),]
+
+    print(paste0("remove invalid ", outcome_or_exposure, "s"))
+    print(head(gwas))
+
+    return(gwas)
+}
+
 convert_input_gwas <- function(opt) {
 
     # get gene name
@@ -72,59 +126,14 @@ convert_input_gwas <- function(opt) {
 
     gwas_colnames <- list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr", "pos")
 
-    # load exposure w/ fread
-    exposure_gwas <- fread(opt$exposure_input_data)
-
-    print("exposure")
-    print(head(exposure_gwas))
-
-    # make list to map exposure colnames
-    old_exposure_cols <- c(
-        opt$exposure_snp_col, 
-        opt$exposure_beta_col, 
-        opt$exposure_se_col, 
-        opt$exposure_eaf_col, 
-        opt$exposure_effect_allele_col, 
-        opt$exposure_other_allele_col, 
-        opt$exposure_pval_col,
-        opt$exposure_samplesize_col, 
-        opt$exposure_chr_col, 
-        opt$exposure_pos_col
-    )
-
-    exposure_cols = gwas_colnames
-    names(exposure_cols) <- old_exposure_cols
-
-    print(paste("these columns are not in the exposure GWAS: ", exposure_cols[!(names(exposure_cols) %in% ..old_exposure_cols)]))
-    exposure_cols <- exposure_cols[names(exposure_cols) %in% colnames(exposure_gwas)]
-
-    # select exposure columns
-    exposure_gwas <- exposure_gwas[, ..old_exposure_cols]
-
-    print("select exposure colnames")
-    print(head(exposure_gwas))
-
-    # modify exposure colnames
-    for (old_name in names(exposure_cols)) {
-        setnames(exposure_gwas, old_name, exposure_cols[[old_name]])
-    }
-
-    print("change exposure colnames")
-    print(head(exposure_gwas))
-
-    # remove invalid entries
-    exposure_gwas <- exposure_gwas[exposure_gwas$SNP != ".",]
-    exposure_gwas <- exposure_gwas[exposure_gwas$SNP != "",]
-    exposure_gwas <- exposure_gwas[!is.na(exposure_gwas$pval),]
-
-    print("remove invalid exposures")
-    print(head(exposure_gwas))
+    # load gwas
+    read_gwas_and_modify_colnames(opt, "exposure")
 
     # limit exposure to significant variants
     entire_exposure_gwas <- exposure_gwas
     exposure_gwas <- data.frame(exposure_gwas[exposure_gwas$pval <= opt$p_cutoff,])
 
-    print("limited to significant exposures")
+    print("limited exposure to significant exposures")
     print(head(exposure_gwas))
 
     if (nrow(exposure_gwas) == 0) {
@@ -143,53 +152,7 @@ convert_input_gwas <- function(opt) {
         return(blank_return)
     }
 
-    # load outcome w/ fread
-    outcome_gwas <- fread(opt$outcome_input_data)
-
-    # make colname list using input options
-    old_outcome_cols <- c(
-        opt$outcome_snp_col, 
-        opt$outcome_beta_col, 
-        opt$outcome_se_col, 
-        opt$outcome_eaf_col, 
-        opt$outcome_effect_allele_col, 
-        opt$outcome_other_allele_col, 
-        opt$outcome_pval_col,
-        opt$outcome_samplesize_col, 
-        opt$outcome_chr_col, 
-        opt$outcome_pos_col
-    )
-
-    outcome_cols = gwas_colnames
-    names(outcome_cols) <- old_outcome_cols
-
-    print(paste("these columns are not in the outcome GWAS: ", outcome_cols[!(names(outcome_cols) %in% ..old_outcome_cols)]))
-    outcome_cols <- outcome_cols[names(outcome_cols) %in% ..old_outcome_cols]
-
-    # select outcome columns
-    outcome_gwas <- outcome_gwas[, ..old_outcome_cols]
-
-    print("selected outcome colnames")
-    print(head(outcome_gwas))
-
-    # change outcome colnames
-    for (old_name in names(outcome_cols)) {
-
-        if (outcome_cols[[old_name]] == "samplesize" & old_name == "") {
-            outcome_gwas$samplesize <- opt$outcome_samplesize
-        } else {
-            setnames(outcome_gwas, old_name, outcome_cols[[old_name]])
-        }
-    }
-
-    print("changed outcome colnames")
-    print(head(outcome_gwas))
-
-    # remove invalid entries
-    outcome_gwas <- outcome_gwas[!is.na(outcome_gwas$pval),]
-
-    print("valid outcomes")
-    print(head(outcome_gwas))
+    read_gwas_and_modify_colnames(opt, "outcome")
 
     # limit each gwas to common variants
     entire_outcome_gwas <- outcome_gwas
