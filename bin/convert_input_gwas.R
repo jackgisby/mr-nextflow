@@ -72,15 +72,15 @@ read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
     # make colname list using input options
     old_cols <- c(
         opt[[paste0(outcome_or_exposure, "_snp_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_beta_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_se_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_eaf_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_effect_allele_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_other_allele_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_pval_col")]],
-        opt[[paste0(outcome_or_exposure, "_outcome_samplesize_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_chr_col")]], 
-        opt[[paste0(outcome_or_exposure, "_outcome_pos_col")]]
+        opt[[paste0(outcome_or_exposure, "_beta_col")]], 
+        opt[[paste0(outcome_or_exposure, "_se_col")]], 
+        opt[[paste0(outcome_or_exposure, "_eaf_col")]], 
+        opt[[paste0(outcome_or_exposure, "_effect_allele_col")]], 
+        opt[[paste0(outcome_or_exposure, "_other_allele_col")]], 
+        opt[[paste0(outcome_or_exposure, "_pval_col")]],
+        opt[[paste0(outcome_or_exposure, "_samplesize_col")]], 
+        opt[[paste0(outcome_or_exposure, "_chr_col")]], 
+        opt[[paste0(outcome_or_exposure, "_pos_col")]]
     )
 
     new_cols <- gwas_colnames
