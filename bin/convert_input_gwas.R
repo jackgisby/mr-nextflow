@@ -121,10 +121,13 @@ convert_input_gwas <- function(opt) {
     gene_to_filename <- gene_to_filename[gene_to_filename$filename == opt$exposure_input_data ,]
 
     stopifnot(nrow(gene_to_filename) == 1)
-    exposure_name <- tolower(gene_to_filename$gene_id[1])
+    exposure_name <- tolower(gene_to_filename$gene_id)
 
     blank_return <- get_blank_return()
     names(blank_return) <- paste(exposure_name, names(blank_return), sep="_")
+
+    print("files in working directory:")
+    print(list.files())
 
     # load gwas
     exposure_gwas <- read_gwas_and_modify_colnames(opt, "exposure")
