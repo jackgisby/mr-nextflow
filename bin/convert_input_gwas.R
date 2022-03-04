@@ -95,8 +95,8 @@ read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
     print(paste0("selected ", outcome_or_exposure, " colnames"))
     print(head(gwas))
 
-    # change outcome colnames
-    for (old_name in names(old_cols)) {
+    # change colnames
+    for (old_name in old_cols) {
         setnames(gwas, old_name, new_cols[[old_name]])
     }
 
