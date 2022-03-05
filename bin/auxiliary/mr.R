@@ -52,7 +52,7 @@ add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
     
     # mr_maxlik
     ml_cor <- MendelianRandomization::mr_maxlik(
-        mrinput, 
+        mrinput,
         correl = TRUE
     )
     
@@ -154,19 +154,19 @@ add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
         
         # mr_median
         weighted_median_cor <- MendelianRandomization::mr_median(
-            mrinput, 
+            mrinput,
             weighting = "weighted"
         )
         
         mr_results <- rbind(mr_results, data.frame(
-            id.exposure = harm$id.exposure[1], 
-            id.outcome = harm$id.outcome[1], 
-            outcome = mrinput@outcome, 
-            exposure = mrinput@exposure, 
-            method = "Weighted median", 
-            nsnp = length(mrinput@snps), 
+            id.exposure = harm$id.exposure[1],
+            id.outcome = harm$id.outcome[1],
+            outcome = mrinput@outcome,
+            exposure = mrinput@exposure,
+            method = "Weighted median",
+            nsnp = length(mrinput@snps),
             b = weighted_median_cor@Estimate,
-            se = weighted_median_cor@StdError, 
+            se = weighted_median_cor@StdError,
             pval = weighted_median_cor@Pvalue,
             package = "MendelianRandomization"
         ))

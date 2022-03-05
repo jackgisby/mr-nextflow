@@ -160,6 +160,10 @@ convert_input_gwas <- function(opt) {
 
     outcome_gwas <- read_gwas_and_modify_colnames(opt, "outcome")
 
+    if (as.numeric(opt$outcome_samplesize) != 0) {
+        outcome_gwas$samplesize <- opt$outcome_samplesize
+    }
+
     # limit each gwas to common variants
     entire_outcome_gwas <- outcome_gwas
     outcome_gwas <- data.frame(outcome_gwas[outcome_gwas$SNP %in% exposure_gwas$SNP, ])

@@ -158,7 +158,7 @@ ld_clump_modified <- function (dat = NULL, clump_kb = 10000, clump_r2 = 0.001, c
     }
 
     if (is.null(bfile)) {
-        access_token = check_access_token()
+        access_token <- check_access_token()
     }
 
     ids <- unique(dat[["id"]])
@@ -449,9 +449,9 @@ ld_matrix_local_modified <- function(variants, bfile, plink_bin, with_alleles=FA
 #' @return List of MRInput objects for each exposure/outcome combination
 
 dat_to_MRInput_modified <- function(
-    dat, 
+    dat,
     get_correlations = TRUE,
-    linkage_file, 
+    linkage_file,
     plink_bin
 )  {
     
@@ -526,7 +526,7 @@ harmonise_ld_dat <- function(
         i3 <- match(x$SNP, snpnames[, 1])
         ld <- ld[i3, i3]
     }
-    
+
     snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
 
     stopifnot(colnames(ld) == rownames(ld))
