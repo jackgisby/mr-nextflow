@@ -298,6 +298,7 @@ convert_input_gwas <- function(opt) {
         if (length(top_exposure_gwas$SNP) > 1) {
             
             top_LD = ld_matrix_modified(top_exposure_gwas$SNP, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
+        
         } else {
             top_LD <- data.frame()
         }

@@ -462,10 +462,6 @@ dat_to_MRInput_modified <- function(
         get_correlations <- FALSE
 
     }
-
-    if (nrow(dat) == 1) {
-        get_correlations <- FALSE
-    }
     
     out <- plyr::dlply(dat, c("exposure", "outcome"), function(x) {
         
@@ -509,36 +505,39 @@ dat_to_MRInput_modified <- function(
 }
 
 harmonise_ld_dat <- function(
-    x, 
+    x,
     ld
 )  {
+    if (nrow(x) > 1) {
+
+        snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
+
+        # remove those in ld that are not also in x
+        i1 <- snpnames[, 1] %in% x$SNP
+        ld <- ld[i1, i1]
+        
+        snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
+        
+        # remove those in x that are not also in ld
+        i2 <- x$SNP %in% snpnames[, 1]
+        x <- x[i2, ]
+        
+        # reorder ld by x
+        i3 <- match(x$SNP, snpnames[, 1])
+        ld <- ld[i3, i3]
+    }
+    
     snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
-    
-    # remove those in ld that are not also in x
-    i1 <- snpnames[,1] %in% x$SNP
-    ld <- ld[i1,i1]
-    
-    snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
-    
-    # remove those in x that are not also in ld
-    i2 <- x$SNP %in% snpnames[,1]
-    x <- x[i2,]
-    
-    # reorder ld by x
-    i3 <- match(x$SNP, snpnames[,1])
-    ld <- ld[i3, i3]
-    
-    snpnames <- do.call(rbind, strsplit(rownames(ld), split = "_"))
-    
+
     stopifnot(colnames(ld) == rownames(ld))
-    stopifnot(all(snpnames[,1] == x$SNP))
+    stopifnot(all(snpnames[, 1] == x$SNP))
     x$effect_allele.exposure <- as.character(x$effect_allele.exposure)
     x$other_allele.exposure <- as.character(x$other_allele.exposure)
     
     # Set1 x and ld alleles match
-    snpnames <- data.frame(snpnames, stringsAsFactors=FALSE)
-    snpnames <- merge(subset(x, select=c(SNP, effect_allele.exposure, other_allele.exposure)), snpnames, by.x="SNP", by.y="X1")
-    snpnames <- snpnames[match(x$SNP, snpnames$SNP),]
+    snpnames <- data.frame(snpnames, stringsAsFactors = FALSE)
+    snpnames <- merge(subset(x, select = c(SNP, effect_allele.exposure, other_allele.exposure)), snpnames, by.x="SNP", by.y="X1")
+    snpnames <- snpnames[match(x$SNP, snpnames$SNP) ,]
     
     snpnames$keep <- (snpnames$X2 == snpnames$effect_allele.exposure & snpnames$X3 == snpnames$other_allele.exposure) |
         (snpnames$X3 == snpnames$effect_allele.exposure & snpnames$X2 == snpnames$other_allele.exposure)

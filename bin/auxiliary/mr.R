@@ -1,7 +1,7 @@
 add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
     
     if (nrow(mr_results) <= 1) {
-        return(list("mr_results"=mr_results))
+        return(list("mr_results" = mr_results))
     }
     
     # mr ivw random
