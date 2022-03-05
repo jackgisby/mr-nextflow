@@ -116,8 +116,8 @@ read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
     for (c in essential_cols) {
         print(paste0("----------------- colname required: ", c))
         stopifnot(c %in% colnames(gwas))
-        stopifnot(!any(is.na(gwas[[c]])))
-        stopifnot(!any(gwas[[c]] == ""))
+        # stopifnot(!any(is.na(gwas[[c]])))
+        # stopifnot(!any(gwas[[c]] == ""))
     }
 
     print(paste0("remove invalid ", outcome_or_exposure, "s"))
