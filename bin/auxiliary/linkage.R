@@ -462,6 +462,10 @@ dat_to_MRInput_modified <- function(
         get_correlations <- FALSE
 
     }
+
+    if (nrow(dat) == 1) {
+        get_correlations <- FALSE
+    }
     
     out <- plyr::dlply(dat, c("exposure", "outcome"), function(x) {
         

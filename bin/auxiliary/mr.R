@@ -1,7 +1,7 @@
 add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
     
     if (nrow(mr_results) <= 1) {
-        return(mr_results)
+        return(list("mr_results"=mr_results))
     }
     
     # mr ivw random
@@ -128,7 +128,7 @@ add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
         ))
 
         pleiotropy <-  mr_pleiotropy_test(harm)
-        pleiotropy$package="TwoSampleMR"
+        pleiotropy$package <- "TwoSampleMR"
 
         pleiotropy_cor <- data.frame(
             id.exposure = harm$id.exposure[1],
@@ -138,7 +138,7 @@ add_tests <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
             egger_intercept = egger_cor@Intercept,
             se = egger_cor@StdError.Int,
             pval = egger_cor@Pleio.pval,
-            package="MendelianRandomization"
+            package = "MendelianRandomization"
         )
 
         pleiotropy <- rbind(pleiotropy, pleiotropy_cor)
@@ -271,22 +271,10 @@ remove_snp_from_mrinput <- function(mrinput, snp) {
     return(mrinput)
 }
 
-null_mr_results <- function(mr_results, null_return) {
-
-    for (result_type in names(null_return)) {
-
-        if (grepl("leaveoneout", result_type)) {
-            mr_results[[result_type]] <- null_return[[result_type]]
-        }
-    }
-
-    return(mr_results)
-}
-
-add_leaveoneout <- function(mr_results, harm, mrinput, mr_parameters, method_list, null_return) {
+add_leaveoneout <- function(mr_results, harm, mrinput, mr_parameters, method_list) {
 
     if (nrow(harm) < 3) {
-        return(null_mr_results(mr_results, null_return))
+        return(mr_results)
     }
 
     mr_results[["mr_results_leaveoneout"]] <- data.frame()

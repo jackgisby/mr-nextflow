@@ -72,10 +72,25 @@ run_mr <- function(opt) {
     mr_results <- add_tests(mr_results, harm, mrinput, mr_parameters, method_list)
 
     # do leaveoneout approach
-    mr_results <- add_leaveoneout(mr_results, harm, mrinput, mr_parameters, method_list, null_return)
+    mr_results <- add_leaveoneout(mr_results, harm, mrinput, mr_parameters, method_list)
+
+    # if any tests failed, add null results
+    mr_results <- null_mr_results(mr_results, null_return)
 
     # set up final results
     names(mr_results) <- paste(exposure_name, names(mr_results), sep="_")
+    return(mr_results)
+}
+
+null_mr_results <- function(mr_results, null_return) {
+
+    for (result_type in names(null_return)) {
+
+        if (!grepl(result_type, names(mr_results))) {
+            mr_results[[result_type]] <- null_return[[result_type]]
+        }
+    }
+
     return(mr_results)
 }
 

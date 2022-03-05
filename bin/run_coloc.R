@@ -58,7 +58,7 @@ run_coloc <- function(opt) {
     null_return <- get_blank_return()
     names(null_return) <- paste(region_name, names(null_return), sep="_")
 
-    if (nrow(outcome) == 0 & nrow(exposure) == 0) {
+    if (nrow(outcome) < 2 | nrow(exposure) < 2) {
         return(null_return)
     }
 

@@ -148,7 +148,7 @@ convert_input_gwas <- function(opt) {
 
     # remove snps in MHC region
     which_mhc = exposure_gwas$chr == 6 & exposure_gwas$pos > 26000000 & exposure_gwas$pos < 34000000
-    
+
     if (any(which_mhc)) {
         exposure_gwas <- exposure_gwas[-which_mhc, ]
     }
@@ -243,7 +243,7 @@ convert_input_gwas <- function(opt) {
                 chr <- NULL
             }
 
-            if (length(cis_exposure_gwas$SNP) > 0) {
+            if (length(cis_exposure_gwas$SNP) > 1) {
                 cis_LD = ld_matrix_modified(cis_exposure_gwas$SNP, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
             } else {
                 cis_LD <- data.frame()
@@ -252,6 +252,7 @@ convert_input_gwas <- function(opt) {
         } else {
             cis_exposure_gwas <- data.frame()
             cis_outcome_gwas <- data.frame()
+            cis_LD <- data.frame()
             message("gene not found in gene position file")
         }
         
@@ -291,7 +292,7 @@ convert_input_gwas <- function(opt) {
             chr <- NULL
         }
 
-        if (length(top_exposure_gwas$SNP) > 0) {
+        if (length(top_exposure_gwas$SNP) > 1) {
             
             top_LD = ld_matrix_modified(top_exposure_gwas$SNP, chr, linkage_file=opt$plink_linkage_files, plink_bin=opt$plink_bin, plink_memory=opt$plink_memory, with_alleles = TRUE)
         } else {
@@ -316,7 +317,7 @@ convert_input_gwas <- function(opt) {
         cis_harm <- harmonise_data(cis_harm, outcome_gwas, 1)
 
         cis_mrinput <- dat_to_MRInput_modified(cis_harm, get_correlations = TRUE, 
-                                               linkage_file = opt$plink_linkage_files, plink_bin = opt$plink_bin)[[1]]
+                                            linkage_file = opt$plink_linkage_files, plink_bin = opt$plink_bin)[[1]]
 
         print(cis_mrinput)
 
