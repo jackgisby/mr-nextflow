@@ -43,15 +43,15 @@ run_coloc <- function(opt) {
 
     region_name <- gsub(".csv", "", gsub("_exposure", "", opt$exposure_input_data))
 
-    exposure <- data.frame(readr::read_csv(opt$exposure_input_data))
+    exposure <- data.frame(data.table::fread(opt$exposure_input_data))
     print("exposure")
     print(head(exposure))
 
-    outcome <- data.frame(readr::read_csv(opt$outcome_input_data))
+    outcome <- data.frame(data.table::fread(opt$outcome_input_data))
     print("outcome")
     print(head(outcome))
 
-    LD <- as.matrix(readr::read_csv(opt$LD))
+    LD <- as.matrix(data.table::fread(opt$LD))
     print("LD")
     print(LD)
 

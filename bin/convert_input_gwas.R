@@ -58,7 +58,6 @@ get_blank_return <- function() {
                 "cis_mrinput" = data.frame(), "all_mrinput" = data.frame()))
 }
 
-
 read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
 
     gwas_colnames <- list("SNP", "beta", "se", "eaf", "effect_allele", "other_allele", "pval", "samplesize", "chr", "pos")
@@ -168,6 +167,11 @@ convert_input_gwas <- function(opt) {
     entire_outcome_gwas <- outcome_gwas
     outcome_gwas <- data.frame(outcome_gwas[outcome_gwas$SNP %in% exposure_gwas$SNP, ])
     exposure_gwas <- exposure_gwas[exposure_gwas$SNP %in% outcome_gwas$SNP, ]
+
+    if (nrow(exposure_gwas) == 0) {
+        message("no significant exposure variants following intersection")
+        return(blank_return)
+    }
 
     print("outcome after intersection")
     print(head(outcome_gwas))

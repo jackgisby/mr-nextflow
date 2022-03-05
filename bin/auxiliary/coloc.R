@@ -1,6 +1,8 @@
 get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
     
     if (!is.null(LD)) {
+
+        print(LD)
         stopifnot(colnames(LD) == rownames(LD))
         
         SNPs <- sapply(colnames(LD), function(SNP) {strsplit(SNP, "_")[[1]][1]})

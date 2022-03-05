@@ -46,7 +46,7 @@ run_mr <- function(opt) {
 
     exposure_name <- gsub(".csv", "", gsub("_harm", "", opt$harm))
 
-    harm <- data.frame(readr::read_csv(opt$harm))
+    harm <- data.frame(data.table::fread(opt$harm))
     print("harm")
     print(head(harm))
 
@@ -57,7 +57,7 @@ run_mr <- function(opt) {
     null_return <- get_blank_return()
     names(null_return) <- paste(exposure_name, names(null_return), sep = "_")
 
-    if (nrow(harm) == 0) {
+    if (nrow(harm) == 0 | ncol(harm) == 1) {
         return(null_return)
     }
 
