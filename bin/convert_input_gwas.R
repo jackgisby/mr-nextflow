@@ -148,7 +148,10 @@ convert_input_gwas <- function(opt) {
 
     # remove snps in MHC region
     which_mhc = exposure_gwas$chr == 6 & exposure_gwas$pos > 26000000 & exposure_gwas$pos < 34000000
-    exposure_gwas <- exposure_gwas[-which_mhc, ]
+    
+    if (any(which_mhc)) {
+        exposure_gwas <- exposure_gwas[-which_mhc, ]
+    }
 
     if (nrow(exposure_gwas) == 0) {
         message("no significant exposure variants following removal of MHC")
