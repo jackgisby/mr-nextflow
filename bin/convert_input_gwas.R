@@ -109,6 +109,7 @@ read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
         stopifnot(c %in% colnames(gwas))
 
         gwas <- gwas[which(gwas[[c]] != "."), ]
+        gwas <- gwas[which(gwas[[c]] != 0), ]
         gwas <- gwas[which(gwas[[c]] != ""), ]
         gwas <- gwas[which(!is.na(gwas[[c]])), ]
     }
