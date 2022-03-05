@@ -102,22 +102,15 @@ read_gwas_and_modify_colnames <- function(opt, outcome_or_exposure) {
     print(paste0("changed ", outcome_or_exposure, " colnames"))
     print(head(gwas))
 
-    # remove invalid entries
-    gwas <- gwas[gwas$SNP != ".", ]
-    gwas <- gwas[gwas$SNP != "", ]
-    gwas <- gwas[!is.na(gwas$pval), ]
-
     essential_cols <- c("SNP", "beta", "se", "effect_allele", "other_allele", "pval", "chr", "pos")
-    if (!all(essential_cols %in% colnames(gwas))) {
-        print(paste0("colnames that are required: ", essential_cols[!essential_cols %in% colnames(gwas)]))
-        stopifnot(FALSE)
-    }
 
     for (c in essential_cols) {
         print(paste0("----------------- colname required: ", c))
         stopifnot(c %in% colnames(gwas))
-        # stopifnot(!any(is.na(gwas[[c]])))
-        # stopifnot(!any(gwas[[c]] == ""))
+
+        gwas <- gwas[which(gwas[[c]] != "."), ]
+        gwas <- gwas[which(gwas[[c]] != ""), ]
+        gwas <- gwas[which(!is.na(gwas[[c]])), ]
     }
 
     print(paste0("remove invalid ", outcome_or_exposure, "s"))
