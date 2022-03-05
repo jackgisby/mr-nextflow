@@ -257,6 +257,9 @@ convert_input_gwas <- function(opt) {
         }
         
     } else {
+        cis_exposure_gwas <- data.frame()
+        cis_outcome_gwas <- data.frame()
+        cis_LD <- data.frame()
         message("gene_position_map_file is NULL; will find trans exposure variants only")
     }
     
