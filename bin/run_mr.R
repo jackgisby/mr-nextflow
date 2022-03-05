@@ -3,14 +3,14 @@ library("optparse")
 library("TwoSampleMR")
 
 # do argument parsing
-option_list = list(
+option_list <- list(
     make_option(c("--harm"), type="character", default=NULL, help="harmonised dataset in TwoSampleMR format", metavar="character"),
     make_option(c("--mrinput"), type="character", default=NULL, help="harmonised dataset in MendelianRandomization format", metavar="character"),
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character")
 )
 
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
 
 print("options")
 print(opt)
@@ -78,10 +78,6 @@ run_mr <- function(opt) {
     # if any tests failed, add null results
     mr_results <- null_mr_results(mr_results, null_return)
 
-    if (any(grepl("fas_cis_fas_cis", names(mr_results)))) {
-        print(names(mr_results))
-        exit()
-    }
     return(mr_results)
 }
 

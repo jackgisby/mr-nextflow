@@ -1,6 +1,6 @@
 get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
     
-    if(!is.null(LD)) {
+    if (!is.null(LD)) {
         stopifnot(colnames(LD) == rownames(LD))
         
         SNPs <- sapply(colnames(LD), function(SNP) {strsplit(SNP, "_")[[1]][1]})
@@ -15,7 +15,7 @@ get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
         correct_orientation <- vector("logical", length(SNPs))
         for (i in 1:length(SNPs)) {
             
-            snp_row <- gwas[gwas$SNP == SNPs[i],]
+            snp_row <- gwas[gwas$SNP == SNPs[i] ,]
             stopifnot(nrow(snp_row) == 1)
             
             if (!(snp_row$effect_allele %in% c(effect[i], other[i]) | snp_row$other_allele %in% c(effect[i], other[i]))) {
@@ -41,7 +41,7 @@ get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
             for (j in 1:length(SNPs)) {
                 
                 if (correct_orientation[i] != correct_orientation[j]) {
-                    LD[i,j] <- - LD[i,j]
+                    LD[i, j] <- - LD[i, j]
                 }
             }
         }
@@ -52,30 +52,36 @@ get_coloc_list <- function(gwas, list_type, LD = NULL, s = "", sdy="") {
             message(paste("SNPs being removed due to incorrect alleles", SNPs[to_remove], sep = "\n"))
         }
         
-        LD <- LD[which(!to_remove),which(!to_remove)]
+        LD <- LD[which(!to_remove), which(!to_remove)]
     }
 
     coloc_in <- list(
         "pvalues" = gwas$pval,
-        "N" = gwas$samplesize,
-        "MAF" = gwas$eaf,
         "beta" = gwas$beta,
         "varbeta" = gwas$se ^ 2,
         "type" = list_type,
         "snp" = gwas$SNP,
         "position" = gwas$pos
     )
-    
+
+    if ("samplesize" %in% colnames(gwas)) {
+        coloc_in$N <- gwas$samplesize
+    }
+
+    if ("eaf" %in% colnames(gwas)) {
+        coloc_in$MAF <- gwas$eaf
+    }
+
     if (s != "") {
-        coloc_in[["s"]] = as.numeric(s)
+        coloc_in[["s"]] <- as.numeric(s)
     }
 
     if (sdy != "") {
-        coloc_in[["sdY"]] = as.numeric(sdy)
+        coloc_in[["sdY"]] <- as.numeric(sdy)
     }
     
     if (!is.null(LD)) {
-        coloc_in[["LD"]] = LD
+        coloc_in[["LD"]] <- LD
     }
     
     return(coloc_in)

@@ -4,7 +4,7 @@ library("data.table")
 library("TwoSampleMR")
 
 # do argument parsing
-option_list = list(
+option_list <- list(
     make_option(c("--exposure_input_data"), type="character", default=NULL, help="exposure input file name", metavar="character"),
     make_option(c("--outcome_input_data"), type="character", default=NULL, help="outcome input file name", metavar="character"),
     make_option(c("--auxiliary_script_dir"), type="character", default=NULL, help="the location of helper scripts", metavar="character"),
@@ -41,8 +41,8 @@ option_list = list(
     make_option(c("--outcome_samplesize"), type="numeric", default=NULL)
 )
  
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
 
 print("options")
 print(opt)
