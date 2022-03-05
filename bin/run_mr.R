@@ -55,7 +55,7 @@ run_mr <- function(opt) {
     print(names(mrinput))
 
     null_return <- get_blank_return()
-    names(null_return) <- paste(exposure_name, names(null_return), sep="_")
+    names(null_return) <- paste(exposure_name, names(null_return), sep = "_")
 
     if (nrow(harm) == 0) {
         return(null_return)
@@ -73,12 +73,15 @@ run_mr <- function(opt) {
 
     # do leaveoneout approach
     mr_results <- add_leaveoneout(mr_results, harm, mrinput, mr_parameters, method_list)
+    names(mr_results) <- paste(exposure_name, names(mr_results), sep = "_")
 
     # if any tests failed, add null results
     mr_results <- null_mr_results(mr_results, null_return)
 
-    # set up final results
-    names(mr_results) <- paste(exposure_name, names(mr_results), sep="_")
+    if (any(grepl("fas_cis_fas_cis", names(mr_results)))) {
+        print(names(mr_results))
+        exit()
+    }
     return(mr_results)
 }
 
@@ -86,7 +89,7 @@ null_mr_results <- function(mr_results, null_return) {
 
     for (result_type in names(null_return)) {
 
-        if (!grepl(result_type, names(mr_results))) {
+        if (!any(grepl(result_type, names(mr_results)))) {
             mr_results[[result_type]] <- null_return[[result_type]]
         }
     }

@@ -53,10 +53,12 @@ workflow MR_COLOC {
         RUN_MR.out.mr_results_leaveoneout.collectFile(name: "mr_results_leaveoneout.csv", keepHeader: true, skip: 1, newLine: false)
     )
 
-    RUN_COLOC(exposure, outcome, LD)
+    if (params.coloc.run) {
+        RUN_COLOC(exposure, outcome, LD)
 
-    COLLATE_COLOC(
-        RUN_COLOC.out.coloc_res.collectFile(name: "coloc_res.csv", keepHeader: true, skip: 1, newLine: false),
-        RUN_COLOC.out.coloc_susie_res.collectFile(name: "coloc_susie_res.csv", keepHeader: true, skip: 1, newLine: false)
-    )
+        COLLATE_COLOC(
+            RUN_COLOC.out.coloc_res.collectFile(name: "coloc_res.csv", keepHeader: true, skip: 1, newLine: false),
+            RUN_COLOC.out.coloc_susie_res.collectFile(name: "coloc_susie_res.csv", keepHeader: true, skip: 1, newLine: false)
+        )
+    }
 }
