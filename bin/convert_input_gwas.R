@@ -156,7 +156,7 @@ convert_input_gwas <- function(opt) {
     which_mhc <- as.character(exposure_gwas$chr) == "6" & as.numeric(exposure_gwas$pos) > 26000000 & as.numeric(exposure_gwas$pos < 34000000)
 
     if (any(which_mhc)) {
-        exposure_gwas <- exposure_gwas[-which_mhc, ]
+        exposure_gwas <- exposure_gwas[-which(which_mhc), ]
     }
 
     if (nrow(exposure_gwas) == 0) {
