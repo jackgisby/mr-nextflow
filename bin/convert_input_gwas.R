@@ -153,7 +153,7 @@ convert_input_gwas <- function(opt) {
     exposure_gwas$gene <- exposure_name
 
     # remove snps in MHC region
-    which_mhc = exposure_gwas$chr == 6 & exposure_gwas$pos > 26000000 & exposure_gwas$pos < 34000000
+    which_mhc <- as.character(exposure_gwas$chr) == "6" & as.numeric(exposure_gwas$pos) > 26000000 & as.numeric(exposure_gwas$pos < 34000000)
 
     if (any(which_mhc)) {
         exposure_gwas <- exposure_gwas[-which_mhc, ]
