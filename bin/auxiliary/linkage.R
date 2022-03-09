@@ -349,6 +349,14 @@ multi_chr_ld_matrix <- function(
     plink_bin=NULL,
     plink_memory=5000
 ) {
+    if (nrow(x) == 1) {
+        
+        LD <- matrix(nrow = 1, ncol = 1)
+        LD[1,1] <- 1
+
+        rownames(LD) <- colnames(LD) <- paste0(x$SNP, "_", x$effect_allele.exposure, "_", x$other_allele.exposure)
+    }
+
     if (is.null(linkage_file)) {
         return(ld_matrix_modified(x$SNP, NULL, with_alleles = TRUE, linkage_file = linkage_file, plink_bin = plink_bin))
     }
